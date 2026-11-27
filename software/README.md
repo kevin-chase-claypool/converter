@@ -723,13 +723,19 @@ Current tools:
   sets the base cycle width in row pitches; **Period variation** controls how
   strongly local depth shortens the cycle and deepens the wave in dark areas
   versus lengthening and flattening it in light areas. A `0 %` variation keeps
-  one common period while amplitude still follows depth. The final scaled path
-  is checked again before planning. This mode is stored as `waves_fixed`;
+  one common period while amplitude still follows depth. Each ink uses its own
+  separated C/M/Y/K coverage after GCR as the depth source, so the four layers
+  carry independent waveforms and combine into the final print. Raising GCR
+  moves that waveform depth from CMY coverage into black. The final scaled
+  path is checked again before planning. This mode is stored as `waves_fixed`;
   existing `waves_even` recipes keep their separate exact-spacing geometry.
   Imported-outline pen-width shrink is disabled for this self-screened mode so
   it cannot narrow the configured physical row clearance. Save preflight warns
   when clearance forces enough local damping to limit the requested period
-  variation, with the remedy to increase Dot pitch or reduce Period variation.
+  variation. If the selected period and variation cannot fit the current
+  pitch, the row-pitch status blocks Save immediately and **Match pen**
+  computes a larger Wave-safe pitch instead of spending time flattening the
+  pattern into straight rows.
   **Wave screen - legacy phase-locked depth (diagnostic)** is a temporary
   comparison mode. It restores the pre-2026-10-29 `waves_zero` geometry, in
   which each row's amplitude follows its own locally smoothed tone. It uses

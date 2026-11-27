@@ -725,6 +725,17 @@ class CmykTab(GeneratorTab):
         self.wave_period_variation.valueChanged.connect(
             self._update_effective_pitch
         )
+        for spin in (
+            self.pitch,
+            self.scale_pct,
+            self.pen_width,
+            self.dot_size,
+            self.wave_period,
+            self.wave_period_variation,
+        ):
+            spin.valueChanged.connect(
+                lambda *_: self._update_wave_spacing_guard()
+            )
         self._update_effective_pitch()
         self.registration_marks = QCheckBox("Corner crosses (all inks)")
         self.registration_marks.setToolTip(
@@ -980,6 +991,25 @@ class CmykTab(GeneratorTab):
     def pen_pitch_mm(self):
         """Dot pitch that satisfies the active screen's pen clearance."""
         scale = max(0.01, self.scale_pct.value() / 100.0)
+        if self.style.currentData() == "waves_fixed":
+            minimum_effective = converter.fixed_wave_minimum_pitch_mm(
+                self.pen_clearance_mm()
+                + converter.WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+                period_pitches=self.wave_period.value(),
+                period_variation=(
+                    self.wave_period_variation.value() / 100.0
+                ),
+                frequency_variation=(
+                    converter.WAVE_FREQUENCY_VARIATION
+                    if self._variable_wave_frequency_active()
+                    else 0.0
+                ),
+                amplitude_scale=self.dot_size.value() / 100.0,
+            )
+            return max(
+                0.1,
+                min(8.0, (minimum_effective + 0.02) / scale),
+            )
         return max(0.1, min(8.0, self.pen_clearance_mm() / scale))
 
     def _update_effective_pitch(self, *_args):
@@ -1014,6 +1044,23 @@ class CmykTab(GeneratorTab):
                 dark_period,
                 light_period,
             )
+            required_effective = (
+                converter.fixed_wave_minimum_pitch_mm(
+                    clearance
+                    + converter.WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+                    period_pitches=self.wave_period.value(),
+                    period_variation=(
+                        self.wave_period_variation.value() / 100.0
+                    ),
+                    frequency_variation=(
+                        converter.WAVE_FREQUENCY_VARIATION
+                        if self._variable_wave_frequency_active()
+                        else 0.0
+                    ),
+                    amplitude_scale=self.dot_size.value() / 100.0,
+                )
+            )
+            text += "; minimum %.2f mm" % required_effective
         self.effective_pitch_label.setText(text)
 
     def _update_sharpen_controls(self, *_args):
@@ -1028,8 +1075,13 @@ class CmykTab(GeneratorTab):
         effective = (
             self.pitch.value() * self.scale_pct.value() / 100.0
         )
+        mode_text = (
+            "Wave-safe baseline pitch"
+            if self.style.currentData() == "waves_fixed"
+            else "Dot pitch"
+        )
         self.status.setText(
-            f"Dot pitch {self.pitch.value():.2f} mm gives "
+            f"{mode_text} {self.pitch.value():.2f} mm gives "
             f"{effective:.2f} mm on-paper clearance for the "
             f"{self.pen_width.value():.2f} mm pen at "
             f"{self.scale_pct.value():.0f} % artwork scale."
@@ -1441,6 +1493,32 @@ class CmykTab(GeneratorTab):
             )
         if not self._wave_spacing_guard_active():
             return "OFF - raw compensation may alter the row baselines"
+        if style == "waves_fixed":
+            effective_pitch = (
+                self.pitch.value()
+                * self.scale_pct.value()
+                / 100.0
+            )
+            required_pitch = converter.fixed_wave_minimum_pitch_mm(
+                self.pen_clearance_mm()
+                + converter.WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+                period_pitches=self.wave_period.value(),
+                period_variation=(
+                    self.wave_period_variation.value() / 100.0
+                ),
+                frequency_variation=(
+                    converter.WAVE_FREQUENCY_VARIATION
+                    if self._variable_wave_frequency_active()
+                    else 0.0
+                ),
+                amplitude_scale=self.dot_size.value() / 100.0,
+            )
+            if effective_pitch < required_pitch - 1e-9:
+                return (
+                    "effective pitch %.2f mm is below the %.2f mm required "
+                    "for the selected Wave period and tonal variation"
+                    % (effective_pitch, required_pitch)
+                )
         if (
             self.theta_mode.value() != "fixed"
             and self.contour_order.currentData()
@@ -1783,7 +1861,11 @@ class CmykTab(GeneratorTab):
                 overdraw=self.overdraw.value(),
                 solid=self.solid_dots.isChecked(),
                 path_tolerance_mm=self.path_tolerance.value() / factor,
-                depth_tone=tones.get("depth"),
+                depth_tone=(
+                    tones[channel]
+                    if style == "waves_fixed"
+                    else tones.get("depth")
+                ),
                 row_clearance_mm=(
                     (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
                     / factor

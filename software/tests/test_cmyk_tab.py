@@ -1847,88 +1847,51 @@ class ScreeningTests(unittest.TestCase):
             "local depth must also vary the row winding rate",
         )
 
-    def test_fixed_baseline_wave_keeps_variable_period_near_pen_clearance(
-        self,
-    ):
-        import converter_core.cmyk as cmyk_core
+    def test_fixed_baseline_rejects_period_that_cannot_fit_clearance(self):
+        import time
 
         spacing = 1.21
         size = 128
         tone = self.np.ones((size, size), dtype="float32")
         yy, _xx = self.np.mgrid[0:size, 0:size]
         depth = (0.12 + 0.80 * yy / (size - 1)).astype("float32")
-        rows = converter.screen_channel(
-            tone,
-            {
-                "off_x": 0.0,
-                "off_y": 0.0,
-                "width_mm": 64.0,
-                "height_mm": 64.0,
-                "pixels_w": size,
-                "pixels_h": size,
-            },
-            style="waves_fixed",
-            spacing_mm=spacing,
-            pen_diameter_mm=0.90,
-            row_clearance_mm=1.15,
-            depth_tone=depth,
-            seed=7,
-            wave_frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+        required = converter.fixed_wave_minimum_pitch_mm(
+            1.15,
+            period_pitches=converter.DEFAULT_WAVE_PERIOD_PITCHES,
+            period_variation=converter.DEFAULT_WAVE_PERIOD_VARIATION,
+            frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
         )
-        rows = sorted(
-            (row for row in rows if len(row) > 100),
-            key=lambda row: row.wave_row_index,
-        )
-        self.assertGreaterEqual(len(rows), 20)
-
-        baselines = [
-            row.wave_baseline_mm[1]
-            for row in rows
-        ]
-        self.assertTrue(
-            all(
-                abs(second - first - spacing) < 1e-9
-                for first, second in zip(baselines, baselines[1:])
+        self.assertGreater(required, spacing)
+        started = time.perf_counter()
+        with self.assertRaisesRegex(
+            ValueError,
+            "needs a larger effective pitch",
+        ):
+            converter.screen_channel(
+                tone,
+                {
+                    "off_x": 0.0,
+                    "off_y": 0.0,
+                    "width_mm": 64.0,
+                    "height_mm": 64.0,
+                    "pixels_w": size,
+                    "pixels_h": size,
+                },
+                style="waves_fixed",
+                spacing_mm=spacing,
+                pen_diameter_mm=0.90,
+                row_clearance_mm=1.15,
+                depth_tone=depth,
+                seed=7,
+                wave_frequency_variation=(
+                    converter.WAVE_FREQUENCY_VARIATION
+                ),
             )
+        self.assertLess(
+            time.perf_counter() - started,
+            0.5,
+            "unsafe Wave geometry must fail before the expensive row pass",
         )
-
-        def crossings(row):
-            baseline = row.wave_baseline_mm[1]
-            signs = [
-                1 if y_value >= baseline else -1
-                for _x, y_value in row
-            ]
-            return sum(
-                first != second
-                for first, second in zip(signs, signs[1:])
-            )
-
-        quarter = max(1, len(rows) // 4)
-        light = sorted(crossings(row) for row in rows[:quarter])
-        dark = sorted(crossings(row) for row in rows[-quarter:])
-        self.assertGreater(
-            dark[len(dark) // 2],
-            light[len(light) // 2] + 5,
-            "dark rows must keep a shorter period even at the clearance limit",
-        )
-
-        ranges = sorted(
-            max(y for _x, y in row) - min(y for _x, y in row)
-            for row in rows
-        )
-        self.assertGreater(
-            ranges[len(ranges) // 2],
-            0.05,
-            "the period-varying waveform must retain nonzero visible depth",
-        )
-        for first, second in zip(rows, rows[1:]):
-            self.assertTrue(
-                cmyk_core._polyline_pair_is_clear(
-                    cmyk_core._polyline_segments(first),
-                    cmyk_core._polyline_segments(second),
-                    1.15,
-                )
-            )
 
     def test_fixed_baseline_period_control_changes_cycle_width(self):
         size = 128
@@ -2126,7 +2089,7 @@ class ScreeningTests(unittest.TestCase):
         tone = self.np.ones((64, 64), dtype="float32")
         with self.assertRaisesRegex(
             ValueError,
-            "effective pitch is smaller than the pen width plus edge gap",
+            "needs a larger effective pitch",
         ):
             converter.screen_channel(
                 tone,
@@ -2834,6 +2797,51 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.wave_period.value(), 3.5)
         self.assertEqual(tab.wave_period_variation.value(), 85.0)
 
+    def test_match_pen_sets_a_wave_safe_pitch_and_unblocks_status(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        tab.pen_width.setValue(0.90)
+        tab.scale_pct.setValue(110)
+        tab.pitch.setValue(1.10)
+        tab.wave_period.setValue(2.0)
+        tab.wave_period_variation.setValue(60)
+
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "blocked",
+        )
+        self.assertIn(
+            "below the",
+            tab.row_pitch_status.text().lower(),
+        )
+        suggested = tab.pen_pitch_mm()
+        self.assertGreater(suggested, 2.0)
+
+        tab.match_pen_pitch()
+
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "pass",
+        )
+        effective = (
+            tab.pitch.value() * tab.scale_pct.value() / 100.0
+        )
+        self.assertGreaterEqual(effective + 1e-9, (
+            converter.fixed_wave_minimum_pitch_mm(
+                tab.pen_clearance_mm()
+                + converter.WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+                period_pitches=tab.wave_period.value(),
+                period_variation=(
+                    tab.wave_period_variation.value() / 100.0
+                ),
+                frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+                amplitude_scale=tab.dot_size.value() / 100.0,
+            )
+        ))
+
     def test_fixed_baseline_preflight_requires_its_machine_header(self):
         host = FakeHost(self.image_path)
         host.settings_for_source = mock.Mock(
@@ -2945,7 +2953,7 @@ class CmykTabTests(unittest.TestCase):
             text = record["gcode"]
             self.assertIn("Wave fixed baselines", text)
             self.assertIn("base period 2.00 x pitch", text)
-            self.assertIn("period variation 60 %", text)
+            self.assertIn("period variation 35 %", text)
             self.assertIn("row-locked projection", text)
             self.assertIn("shared Wave row angles", text)
             self.assertGreater(
@@ -3215,6 +3223,82 @@ class CmykTabTests(unittest.TestCase):
                 "f85ec410dbac",
                 channel,
             )
+
+    def test_fixed_baseline_depth_is_independent_for_each_ink(self):
+        import numpy as np
+
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        with mock.patch.object(
+            converter,
+            "screen_channel",
+            return_value=[],
+        ) as screen_channel:
+            tab._ensure_layers()
+        calls = {
+            channel: call
+            for channel, call in zip(
+                converter.CHANNELS,
+                screen_channel.call_args_list,
+            )
+        }
+        depths = {
+            channel: call.kwargs["depth_tone"]
+            for channel, call in calls.items()
+        }
+        self.assertTrue(
+            all(
+                call.kwargs["style"] == "waves_fixed"
+                for call in calls.values()
+            )
+        )
+        self.assertFalse(
+            np.array_equal(depths["c"], depths["m"])
+        )
+        self.assertFalse(
+            np.array_equal(depths["m"], depths["y"])
+        )
+        self.assertFalse(
+            np.array_equal(depths["y"], depths["k"])
+        )
+
+    def test_gcr_redistributes_fixed_baseline_wave_depth(self):
+        import numpy as np
+
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+
+        def channel_depths(gcr):
+            tab.gcr.setValue(gcr)
+            with mock.patch.object(
+                converter,
+                "screen_channel",
+                return_value=[],
+            ) as screen_channel:
+                tab._ensure_layers()
+            return {
+                channel: call.kwargs["depth_tone"]
+                for channel, call in zip(
+                    converter.CHANNELS,
+                    screen_channel.call_args_list,
+                )
+            }
+
+        no_gcr = channel_depths(0)
+        full_gcr = channel_depths(100)
+        self.assertGreater(
+            float(np.mean(full_gcr["k"])),
+            float(np.mean(no_gcr["k"])),
+            "higher GCR must move local depth into black",
+        )
+        self.assertGreater(
+            float(np.mean(no_gcr["c"])),
+            float(np.mean(full_gcr["c"])),
+            "higher GCR must remove black density from cyan depth",
+        )
 
     def test_pen_offsets_keep_the_shared_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))

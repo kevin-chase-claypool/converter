@@ -60,11 +60,42 @@ WAVE_FREQUENCY_VARIATION = 0.18
 # independent of that waveform choice.
 WAVE_FIXED_FREQUENCY_TONE_GAIN = 0.32
 DEFAULT_WAVE_PERIOD_PITCHES = 2.0
-DEFAULT_WAVE_PERIOD_VARIATION = 0.60
+DEFAULT_WAVE_PERIOD_VARIATION = 0.35
 WAVE_CLEARANCE_SAFETY_MARGIN_MM = 0.02
+WAVE_PERIOD_CLEARANCE_SAFETY_FACTOR = 1.10
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
+
+
+def fixed_wave_minimum_pitch_mm(
+    clearance_mm,
+    period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
+    period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
+    frequency_variation=0.0,
+    amplitude_scale=1.0,
+):
+    """Minimum effective row pitch for a safe fixed-baseline waveform."""
+    clearance = max(0.0, float(clearance_mm))
+    period = max(0.5, float(period_pitches))
+    maximum_frequency = (
+        1.0
+        + max(0.0, float(period_variation)) * 0.5
+        + max(0.0, float(frequency_variation))
+    )
+    maximum_slope = (
+        0.5
+        * max(0.1, float(amplitude_scale))
+        * 2.0
+        * math.pi
+        / period
+        * maximum_frequency
+    )
+    return (
+        clearance
+        * math.sqrt(1.0 + maximum_slope * maximum_slope)
+        * WAVE_PERIOD_CLEARANCE_SAFETY_FACTOR
+    )
 
 
 class InkTrail(list):
@@ -1047,6 +1078,20 @@ def _wave_rows(
                 "the effective pitch is smaller than the pen width plus "
                 "edge gap."
             )
+        required_pitch = fixed_wave_minimum_pitch_mm(
+            clearance_target,
+            period_pitches=wave_period_pitches,
+            period_variation=wave_period_variation,
+            frequency_variation=wave_frequency_variation,
+            amplitude_scale=amplitude_scale,
+        )
+        if spacing < required_pitch - 1e-9:
+            raise ValueError(
+                "Variable-depth Wave needs a larger effective pitch for "
+                "the selected period and tonal variation: current %.3f mm, "
+                "minimum %.3f mm."
+                % (spacing, required_pitch)
+            )
         radians_per_mm = 2.0 * math.pi / wavelength
         period_variation = max(
             0.0,
@@ -1121,6 +1166,19 @@ def _wave_rows(
             [1.0] * len(x_values)
             for _row_index in range(len(row_ys))
         ]
+        desired_offsets = [
+            [
+                (
+                    amplitude_max
+                    * smoothed_tone[row_index][x_index]
+                    * math.sin(row_phases[row_index][x_index])
+                    if tone_rows[row_index][x_index] >= INK_FLOOR
+                    else None
+                )
+                for x_index in range(len(x_values))
+            ]
+            for row_index in range(len(row_ys))
+        ]
 
         def candidate(scales):
             result = [
@@ -1130,17 +1188,40 @@ def _wave_rows(
             for row_index, y in enumerate(row_ys):
                 scale = scales[row_index]
                 for x_index, x in enumerate(x_values):
-                    if tone_rows[row_index][x_index] < INK_FLOOR:
+                    desired = desired_offsets[row_index][x_index]
+                    if desired is None:
                         continue
                     offset = (
-                        amplitude_max
-                        * scale
+                        scale
                         * local_scales[row_index][x_index]
-                        * smoothed_tone[row_index][x_index]
-                        * math.sin(row_phases[row_index][x_index])
+                        * desired
                     )
                     result[row_index][x_index] = (x, y + offset)
             return result
+
+        def pair_positions(first_row, second_row):
+            first = [None] * len(x_values)
+            second = [None] * len(x_values)
+            for x_index, x in enumerate(x_values):
+                first_desired = desired_offsets[first_row][x_index]
+                second_desired = desired_offsets[second_row][x_index]
+                if first_desired is not None:
+                    first[x_index] = (
+                        x,
+                        row_ys[first_row]
+                        + scales[first_row]
+                        * local_scales[first_row][x_index]
+                        * first_desired,
+                    )
+                if second_desired is not None:
+                    second[x_index] = (
+                        x,
+                        row_ys[second_row]
+                        + scales[second_row]
+                        * local_scales[second_row][x_index]
+                        * second_desired,
+                    )
+            return first, second
 
         scales = [1.0] * len(row_ys)
         positions = candidate(scales)
@@ -1153,23 +1234,19 @@ def _wave_rows(
                         or tone_rows[row_index + 1][x_index] < INK_FLOOR
                     ):
                         continue
+                    first_desired = desired_offsets[row_index][x_index]
+                    second_desired = desired_offsets[
+                        row_index + 1
+                    ][x_index]
                     first_offset = (
-                        amplitude_max
-                        * scales[row_index]
+                        scales[row_index]
                         * local_scales[row_index][x_index]
-                        * smoothed_tone[row_index][x_index]
-                        * math.sin(
-                            row_phases[row_index][x_index]
-                        )
+                        * first_desired
                     )
                     second_offset = (
-                        amplitude_max
-                        * scales[row_index + 1]
+                        scales[row_index + 1]
                         * local_scales[row_index + 1][x_index]
-                        * smoothed_tone[row_index + 1][x_index]
-                        * math.sin(
-                            row_phases[row_index + 1][x_index]
-                        )
+                        * second_desired
                     )
                     gap = spacing + second_offset - first_offset
                     if gap >= clearance_target - 1e-9:
@@ -1207,11 +1284,16 @@ def _wave_rows(
                 best = 0.0
                 for _step in range(WAVE_CLEARANCE_SEARCH_STEPS + 1):
                     fraction = (low + high) * 0.5
-                    scales[row_index] *= fraction
-                    scales[row_index + 1] *= fraction
-                    trial = candidate(scales)
-                    trial_first = _polyline_segments(trial[row_index])
-                    trial_second = _polyline_segments(trial[row_index + 1])
+                    saved_first = scales[row_index]
+                    saved_second = scales[row_index + 1]
+                    scales[row_index] = saved_first * fraction
+                    scales[row_index + 1] = saved_second * fraction
+                    trial_first, trial_second = pair_positions(
+                        row_index,
+                        row_index + 1,
+                    )
+                    trial_first = _polyline_segments(trial_first)
+                    trial_second = _polyline_segments(trial_second)
                     if _polyline_pair_is_clear(
                         trial_first,
                         trial_second,
@@ -1221,11 +1303,11 @@ def _wave_rows(
                         low = fraction
                     else:
                         high = fraction
-                    scales[row_index] /= fraction
-                    scales[row_index + 1] /= fraction
+                    scales[row_index] = saved_first
+                    scales[row_index + 1] = saved_second
                 scales[row_index] *= best
                 scales[row_index + 1] *= best
-                positions = candidate(scales)
+            positions = candidate(scales)
             if not failed and _wave_clearance_ok(
                 positions,
                 spacing,
@@ -1584,6 +1666,29 @@ def screen_channel(
     style = str(style).strip().lower()
     if style in ("waves", "waves_zero") and not allow_variable_wave_spacing:
         style = "waves_even"
+    if style == "waves_fixed":
+        if row_clearance_mm is None:
+            fixed_clearance = (
+                max(0.0, float(pen_diameter_mm))
+                + WAVE_MIN_EDGE_GAP_MM
+            )
+        else:
+            fixed_clearance = max(0.0, float(row_clearance_mm))
+        required_pitch = fixed_wave_minimum_pitch_mm(
+            fixed_clearance + WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+            period_pitches=wave_period_pitches,
+            period_variation=wave_period_variation,
+            frequency_variation=wave_frequency_variation,
+            amplitude_scale=dot_scale,
+        )
+        if spacing < required_pitch - 1e-9:
+            raise ValueError(
+                "Variable-depth Wave needs a larger effective pitch for "
+                "the selected period and tonal variation: current %.3f mm, "
+                "minimum %.3f mm. Increase Dot pitch, reduce Period "
+                "variation, or reduce Dot size."
+                % (spacing, required_pitch)
+            )
     if style == "stipple":
         points = stipple_points(
             bounds,

@@ -37,6 +37,10 @@ width; local image depth shortens the period and increases amplitude in dark
 areas, while light areas lengthen the period and flatten it. Equal row
 baselines remain fixed.
 
+Each ink now uses its own separated local coverage after GCR to drive that
+waveform. Cyan, magenta, yellow, and black therefore have independent period
+and amplitude structures that combine in the finished CMYK print.
+
 The previous near-clearance fallback automatically stretched the period and
 shared the carrier across rows, which made the waveform excessively broad and
 removed the tonal period hierarchy. Clearance violations are now handled by
@@ -64,6 +68,9 @@ period and local-only safety correction.
   baseline.
 - The same depth controls amplitude and period. A `0 %` variation keeps a
   common period while amplitude still follows depth.
+- Hidden shared-scene depth was replaced by each channel's own local tone.
+  GCR therefore redistributes waveform depth between black and CMY instead of
+  all four inks tracing one common image field.
 - Clearance is enforced in two stages: a shortest-segment check for each
   adjacent pair, then column-local offset reduction only where rows actually
   approach. Whole-row damping remains a final fallback, not the primary path.
@@ -76,6 +83,12 @@ period and local-only safety correction.
 - Preflight warns when local clearance damping is strong enough to limit the
   configured depth, directing the operator to increase pitch or reduce period
   variation.
+- An analytic minimum-pitch check rejects impossible period/clearance
+  combinations before tone sampling. At the reported `1.21 mm` pitch this
+  returns immediately instead of spending more than 150 seconds per layer and
+  emitting straight lines.
+- **Match pen** uses that same calculation, so it sets a Wave-safe effective
+  pitch rather than only the bare pen-plus-gap minimum.
 
 ## Verification
 
@@ -91,8 +104,14 @@ period and local-only safety correction.
   survive serialization and artwork scaling.
 - The real-pipeline Save regression verifies that period controls round-trip,
   reach the recipe and manifest, and appear in emitted G-code.
-- The focused CMYK, Xθ/Yθ, checker, and contour suites pass `147` tests.
-- Complete converter discovery passes `666` tests with one expected OpenGL
+- A per-channel regression confirms each ink receives a distinct depth field,
+  and a GCR regression confirms higher GCR moves depth from cyan coverage into
+  black.
+- The impossible screenshot configuration fails in under `0.5 s` before any
+  row pass. A 300 mm layer at a safe pitch completes in about `1.8 s`.
+- The focused CMYK, Xθ/Yθ, checker, coupon, and contour suites pass `156`
+  tests.
+- Complete converter discovery passes `669` tests with one expected OpenGL
   context skip.
 
 ## Struggles and rejected approaches
@@ -108,9 +127,9 @@ period and local-only safety correction.
 
 ## Risks and follow-up
 
-- At very tight pitch, local clearance can still reduce amplitude or shorten
-  the safe period range. The UI warning identifies that condition; increasing
-  Dot pitch or reducing Period variation gives the waveform more room.
+- At very tight pitch, the requested period/amplitude combination is rejected
+  with a clear minimum. Increasing Dot pitch, reducing Period variation, or
+  reducing Dot size restores room for visible tonal depth.
 - The final physical coupon must still confirm ink spread and machine-following
   behavior. Software geometry alone does not prove paper-level clearance.
 - The source-space period is scaled by the final bed fit; the generated
@@ -125,7 +144,8 @@ period and local-only safety correction.
 - `software/converter_core/gcode.py`: period evidence in the final G-code
   header and baseline grid.
 - `software/generator_tabs/cmyk_tab.py`: controls, live period readout,
-  recipe/manifest persistence, and clearance-limit warning.
+  per-channel depth routing, recipe/manifest persistence, Wave-safe Match pen,
+  and clearance-limit warning.
 - `software/tests/test_cmyk_tab.py`,
   `software/tests/test_contour_order.py`: period and serialization regressions.
 - `software/README.md`, `docs/decisions/ADR-009-post-registration-bed-compensation.md`,

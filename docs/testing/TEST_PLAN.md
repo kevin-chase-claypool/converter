@@ -597,6 +597,9 @@ Acceptance:
 - The **Wave period** control visibly changes the base cycle width, while
   **Period variation** makes dark rows shorter/deeper and light rows
   longer/flatter within the same patch.
+- Each ink uses its own post-GCR channel density. Changing GCR moves waveform
+  depth between black and CMY rather than keeping all four colors on one
+  common waveform.
 - Row-local amplitude and winding rate visibly differ across the patch.
 - No adjacent rows touch or cross, including under Xθ/Yθ interpolation.
 - The rotating-bed half produces the same row-baseline pitch and no additional

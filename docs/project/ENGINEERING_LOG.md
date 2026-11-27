@@ -16,6 +16,10 @@
 - The mode now exposes **Wave period** in row pitches and **Period variation**
   in percent. Local depth changes both period and amplitude: dark rows become
   shorter and deeper, light rows longer and flatter.
+- Cyan, magenta, yellow, and black now use their own separated local coverage
+  after GCR as waveform depth. The four layers therefore carry independent
+  period/amplitude structures that combine in the print; changing GCR moves
+  groove depth between black and CMY.
 - Whole-row damping was replaced with column-local damping. Only offsets that
   would actually collide are reduced; the equal college-ruled baselines and
   unaffected portions of every waveform remain intact.
@@ -26,9 +30,13 @@
 - Period and variation now persist through the image recipe, SVG row metadata,
   version-5 set manifest, and fixed-baseline G-code header. Save preflight
   warns when local clearance damping materially limits the requested depth.
-- The focused CMYK, Xθ/Yθ, final-coordinate, and contour suites pass `147`
-  tests.
-- Complete converter discovery passes `666` tests with one expected
+- The reported `1.21 mm` geometry was too tight for the selected period and
+  variation. It previously consumed more than 150 seconds on one 300 mm layer
+  before returning a nearly straight result. An analytic minimum-pitch gate
+  now rejects it immediately, and **Match pen** returns the safe value.
+- The focused CMYK, Xθ/Yθ, final-coordinate, coupon, and contour suites pass
+  `156` tests.
+- Complete converter discovery passes `669` tests with one expected
   OpenGL-context skip.
 - Evidence: `WSW-20261126-014`;
   `docs/changes/windows-software/2026/2026-11-26-fixed-baseline-clearance-wavelength.md`.
@@ -64,7 +72,7 @@
 - Added the four-patch `cmyk-variable-depth-wave-coupon.gcode` comparison:
   XY-only and Xθ/Yθ at `3.36/4.20 mm` on a 0-degree screen. Physical
   inspection after one HOME + REGISTER remains the acceptance gate.
-- The regenerated coupon strict motion check passes with `3,996` drawing
+- The regenerated coupon strict motion check passes with `3,649` drawing
   moves, a `1.77 deg` maximum drawing-bed step, `500 motor deg/s` peak A
   rate, no rotated pen-up `G0`, and `0.015 mm` worst bounded bed path bow.
 - Complete converter discovery passes `662` tests with one expected

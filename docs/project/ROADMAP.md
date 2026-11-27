@@ -562,7 +562,12 @@ task rather than treated as the active production path.
   offsets, preserving the equal baselines and unaffected waveform. A
   `0.02 mm` internal safety margin covers quantization and rotation. At the
   screenshot pitch, dark rows now use roughly `60-65` crossings versus
-  `42-48` for light rows while retaining the required clearance.
+  `42-48` for light rows when the pitch is large enough to support the
+  selected depth. Each ink now derives period and amplitude from its own
+  post-GCR channel coverage, so the four colors are independent and combine
+  into the print. Impossible screenshot geometry is rejected immediately and
+  **Match pen** returns a Wave-safe pitch instead of running the expensive
+  damping pass or emitting straight rows.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

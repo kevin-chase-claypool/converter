@@ -46,12 +46,14 @@ treats exact adjacent-row pitch as a hard geometry constraint.
 **Variable-depth Wave - fixed baselines** instead treats the equal row-baseline
 lattice as the hard constraint and permits the visible instantaneous gaps to
 vary with row-local depth. Its base period is operator-controlled in row
-pitches, and local tone varies both the period and amplitude. Near the
-pen-clearance limit, only the local offsets that would collide are reduced;
-the equal row baselines and unaffected waveform remain intact. Both default
-spacing guards keep the selected profile but apply a row-locked projection.
-The full measured field is evaluated in the effective screen frame, then
-averaged across the perpendicular row coordinate at each along-row position:
+pitches, and each separated ink channel's local coverage after GCR varies both
+its period and amplitude. The four independent waveforms combine in the final
+print. Near the pen-clearance limit, only the local offsets that would collide
+are reduced; the equal row baselines and unaffected waveform remain intact.
+Both default spacing guards keep the selected profile but apply a row-locked
+projection. The full measured field is evaluated in the effective screen
+frame, then averaged across the perpendicular row coordinate at each along-row
+position:
 
 ```text
 C_row_locked(u) = average_v C_bed(u, v)
