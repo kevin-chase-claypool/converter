@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20261127-cmyk-gcode-registration-gate"></a>
+### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Gate CMYK release on pointwise G-code registration
+
+- Reproduced the reported failure class with a red regression: the previous
+  identity/reach audit reported PASS when the entire cyan registration
+  geometry was translated by `10 mm`.
+- CMYK artwork now emits four named corner crosses with stable IDs and
+  horizontal/vertical arm metadata. The tags survive SVG serialization, flip,
+  scale, page-frame placement, pen offsets, clipping, and planning.
+- Added a final-G-code registration audit that parses each marked arm's
+  pen-down moves, divides emitted motor-shaft `A` by the theta ratio, reverses
+  the active compensation transform, and compares recovered bed-frame centres.
+- The gate requires at least four non-collinear marks, identical IDs/counts
+  across selected inks, one shared G54/compensation/planning-radius/final-scale/
+  A-schedule identity, and exact single application of each pen offset.
+- Software limits are `0.10 mm` maximum residual, `0.05 mm` RMS, and matching
+  rotation/scale bounds derived at the corner radius. A `10 mm` shift fails
+  unambiguously. The limit is tighter than the current physical compensation
+  residual and is not a paper-overlay claim.
+- Save audits planned program text before writing. After publication it
+  re-reads all files and repeats the audit; post-write failure reports
+  `Save verification FAILED` instead of success.
+- Set manifests advance to version 6 and record each ink's matched count,
+  centroid, translation, rotation, scale, RMS, maximum residual, pen-offset
+  error, and pass/fail. PNG overlay diagnostics add mark centres and residual
+  vectors.
+- Regressions cover a `10 mm` translation, `0.10 deg` rotation, `0.1 %` scale,
+  double-applied pen offset, missing marks, matching fixed-bed geometry,
+  rotating-bed/common-frame recovery, pre-write blocking, post-write
+  re-reading, and final-scale/A-schedule identity mismatches.
+- The focused CMYK suite passes `132` tests. Complete converter discovery
+  passes `681` tests with one expected OpenGL-context skip.
+- A physical four-pen sheet after one `G65 P113` HOME + REGISTER remains
+  required; no physical-overlay claim is made.
+- Evidence: `WSW-20261127-001`;
+  `docs/changes/windows-software/2026/2026-11-27-cmyk-gcode-registration-gate.md`;
+  `docs/decisions/ADR-013-gcode-registration-gate.md`.
+- Category: windows-software, cmyk, gcode, registration, fiducial, overlay,
+  compensation-inversion, pen-offset, save-guard, manifest,
+  physical-validation-pending.
+
 <a id="elog-20261126-fixed-baseline-clearance-wavelength"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Control tonal Wave period with fixed baselines
 

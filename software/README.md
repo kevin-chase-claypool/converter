@@ -559,8 +559,9 @@ Current tools:
   dot size, solid dots (spiral-filled so each
   mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
   marks per ink, seed, preview and write checkboxes per layer, page size,
-  margin, artwork scale, and registration corner crosses (all four inks
-  draw the same four margin crosses so pass alignment can be checked).
+  margin, artwork scale, and registration corner crosses (enabled by default;
+  all four inks draw the same four named margin crosses so emitted alignment
+  can be audited).
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
@@ -597,13 +598,23 @@ Current tools:
   active CMYK worker.
   **Save 4 G-code files** writes
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
-  After those files are written, the app reads them back from disk and creates
-  `<name>-overlay.png` plus `<name>-overlay.json`. The image renders all
-  pen-down paths in one G54 machine frame with the reach and planning circles,
-  center axes, and per-ink bounding boxes. The JSON records pass/fail,
-  cross-file identity, per-ink bounds/centers/max radii, ink envelopes, row
-  angles, and source program paths. A failed overlay audit is reported in the
-  save status and log while leaving the generated files available for review.
+  Before writing, the app parses the planned `G1` text for the four named
+  corner marks, reverses the emitted `A` rotation and selected compensation
+  transform, removes each declared pen offset, and compares the recovered
+  bed-frame centres. It blocks the write unless every ink has the same mark
+  IDs, one shared G54/compensation/planning-radius/final-scale/A-schedule
+  identity, and translation, rotation, scale, RMS, maximum residual, and pen
+  offset within the documented software limits.
+  After the files are written, the app re-reads them from disk, repeats that
+  audit, and creates `<name>-overlay.png` plus `<name>-overlay.json`. The image
+  renders the pen-down paths, per-ink boxes, recovery circles, and named mark
+  centre residual vectors. The JSON records identity, registration evidence,
+  per-ink centroid/RMS/maximum/translation/rotation/scale, matched mark count,
+  pen-offset error, pass/fail, and source paths. A pre-write failure writes
+  nothing; a post-write failure reports that Save verification failed and
+  leaves all files available for diagnosis but not for printing as a set.
+  **Software registration PASS** is separate from the required physical
+  four-pen overlay test. It does not prove ink is actually aligned on paper.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited
   unchanged, so each ink is as cost-efficient as a normal Convert program;
   the tab's **Bed motion** bullets (Xθ/Yθ or XY only) apply to all four ink
@@ -643,9 +654,10 @@ Current tools:
   The four programs share one **page frame**: they are planned around the
   page centre rather than each ink's own bounding box, so **Artwork scale**
   changes the printed size while leaving the four passes co-registered
-  (2026-10-20 fix, `WSW-20261020-001`). The optional corner crosses are now
-  only a machine-alignment check - tick them to see the four passes overlap
-  on paper, not to make the programs align.
+  (2026-10-20 fix, `WSW-20261020-001`). The corner crosses are the stable
+  four-point registration geometry used by the release gate, not the mechanism
+  that centers the layers. Keep them enabled for a plot set: without them Save
+  is blocked because the app cannot prove pointwise emitted registration.
   **Running the four passes:** call `G65 P113` once before the set (HOME +
   REGISTER), then run the files back to back. Each file begins with `G54`
   and its own first fed travel to its start point, and ends with a full pen
@@ -689,16 +701,24 @@ Current tools:
   pen-radius envelope against the configured reach. Hard violations block Save
   and warnings go to the log. Wave output also proves its final G-code contains
   the row-locked projection and shared row-angle headers when required.
-  A successful artwork save writes a version-5 `<name>-set.json` beside the
+  Registration preflight is separate: it requires all selected inks to expose
+  four non-collinear named crosses and to share G54, compensation profile,
+  planning radii, final fitted scale, and A-schedule identity. It rejects a
+  maximum point residual over `0.10 mm` or RMS over `0.05 mm`. Those are
+  software-command limits; the printer's measured physical residual is larger,
+  so they are not a physical-overlay promise.
+  A successful artwork save writes a version-6 `<name>-set.json` beside the
   four files with the source hash, page and motion mode, bed-compensation
   profile, complete image/screen recipe, sharpening amount and radius, final
   fitted baseline pitch, per-ink row grids, pen offsets, `row_pitch_preflight`,
   per-ink preflight results, SHA-256 hashes for all four G-code files, parsed
-  program identities, and the identity/reach overlay-audit report. The pitch
-  is measured from the final row metadata after Artwork scale, global bed fit,
-  and any applicable pen transform, so it is no longer the pre-fit tab pitch
-  that could disagree with the G-code. The identity/reach report deliberately
-  does not claim row spacing passed.
+  program identities, and the complete overlay/registration audit. The
+  `registration_audit` field records each ink's matched count, centroid, RMS,
+  maximum residual, translation, rotation, scale, and pass/fail;
+  `software_registration_passed` and `physical_overlay` keep those two claims
+  separate. The pitch is measured from the final row metadata after Artwork
+  scale, global bed fit, and any applicable pen transform, so it is no longer
+  the pre-fit tab pitch that could disagree with the G-code.
   The Image group's **Save defaults for this image** button immediately writes
   the current complete CMYK recipe and artwork placement to the image's
   `.theta-layout.json` sidecar. This includes image controls, screen and row
@@ -794,7 +814,7 @@ Current tools:
   Verify a saved set with
   `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
   four manifest hashes, the row-locked header and profile identity, the
-  version-5 zero shared-translation record, the final fitted pitch, and the
+  version-6 zero shared-translation record, the final fitted pitch, and the
   emitted fixed-baseline row metadata. For equidistant rows it measures the
   final-paper adjacent-gap spread. For variable-depth rows it checks that the
   baselines remain uniformly spaced while the actual row envelopes vary, and

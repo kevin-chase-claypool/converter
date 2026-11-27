@@ -33,6 +33,11 @@ class ProgramSetIdentityTests(unittest.TestCase):
         self.assertEqual(identity["frame_center_mm"], (0.0, 0.0))
         self.assertEqual(identity["profile_fingerprint"], "f85ec410dbac")
         self.assertEqual(identity["machine_reach_radius_mm"], 180.0)
+        self.assertEqual(identity["final_scale"], 1.0)
+        self.assertEqual(
+            identity["a_schedule_identity"],
+            "per-contour",
+        )
 
     def test_mismatched_frame_or_profile_is_rejected(self):
         programs = self.programs()
@@ -57,6 +62,23 @@ class ProgramSetIdentityTests(unittest.TestCase):
                 self.programs(),
                 expected_profile_fingerprint="deadbeefcafe",
             )
+
+    def test_final_scale_and_a_schedule_identity_must_match(self):
+        programs = self.programs()
+        programs["y"] = programs["y"].replace(
+            "(program scale 1.000000000, A schedule per-contour)",
+            "(program scale 1.001000000, A schedule per-contour)",
+        )
+        with self.assertRaisesRegex(ValueError, "final scale"):
+            converter.validate_program_set_identity(programs)
+
+        programs = self.programs()
+        programs["k"] = programs["k"].replace(
+            "A schedule per-contour",
+            "A schedule different-schedule",
+        )
+        with self.assertRaisesRegex(ValueError, "A schedule"):
+            converter.validate_program_set_identity(programs)
 
     def test_expected_row_angles_are_checked_per_ink(self):
         settings = dataclasses.replace(

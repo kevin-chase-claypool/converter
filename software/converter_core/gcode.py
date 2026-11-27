@@ -705,6 +705,22 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             settings.theta_controller_limits.max_rate_deg_min,
             settings.theta_controller_limits.max_acceleration_deg_s2,
         ),
+        "(program scale %.9f, A schedule %s)"
+        % (
+            float(settings.scale),
+            re.sub(
+                r"[^A-Za-z0-9_.-]+",
+                "-",
+                str(
+                    getattr(
+                        settings,
+                        "a_schedule_identity",
+                        "per-contour",
+                    )
+                ),
+            ).strip("-")
+            or "per-contour",
+        ),
         # Which frame and kinematics produced the file. Multi-pass tools need
         # this to tell a shared-page-frame save from an older per-layer one.
         "(frame %s, bed motion %s)"
@@ -844,6 +860,49 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
 
         x0, y0 = machine_point(pts[0], first_theta)
         first_motor_theta = first_theta * settings.theta_drive_ratio
+        registration_mark_id = getattr(
+            pts,
+            "registration_mark_id",
+            None,
+        )
+        registration_center = getattr(
+            pts,
+            "registration_mark_center_mm",
+            None,
+        )
+        registration_offset = getattr(
+            pts,
+            "registration_mark_pen_offset_mm",
+            None,
+        )
+        if registration_mark_id and registration_center is not None:
+            offset = registration_offset or (0.0, 0.0)
+            lines.append(
+                "(registration mark id=%s arm=%s "
+                "center=%.6f,%.6f offset=%.6f,%.6f mm)"
+                % (
+                    re.sub(
+                        r"[^A-Za-z0-9_.-]+",
+                        "-",
+                        str(registration_mark_id),
+                    ),
+                    re.sub(
+                        r"[^A-Za-z0-9_.-]+",
+                        "-",
+                        str(
+                            getattr(
+                                pts,
+                                "registration_mark_arm",
+                                "unknown",
+                            )
+                        ),
+                    ),
+                    float(registration_center[0]),
+                    float(registration_center[1]),
+                    float(offset[0]),
+                    float(offset[1]),
+                )
+            )
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
         wave_row_index = getattr(pts, "wave_row_index", None)
         wave_baseline = getattr(pts, "wave_baseline_mm", None)

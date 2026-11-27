@@ -122,21 +122,62 @@ projection maximum, and per-ink row angle in its header. Its set manifest
 records `row_locked_projection` rather than claiming the raw field was applied.
 Fixed-baseline G-code also records the final fitted baseline pitch, origin,
 row count, effective screen angle, and a per-contour row/baseline annotation.
-Manifest version 5 records the pre-fit tab pitch separately from the measured
+Manifest version 6 records the pre-fit tab pitch separately from the measured
 final pitch and per-ink baseline grids. This makes the scale evidence survive
 global bed fit and the final `X/Y/A` transform instead of advertising the
 pre-fit recipe value.
 Every current G-code file also records its G54 frame center, compensation
-fingerprint, compensation reserve, pen-radius reserve, and planning radius.
-CMYK planning rejects the complete set if any of those identities differ
-between inks, or if a Wave row-locked channel does not match its configured
-screen angle. The set manifest stores the parsed identity per ink with the
-file hashes.
+fingerprint, compensation reserve, pen-radius reserve, planning radius, final
+fitted scale, and an A-planning identity digest. CMYK planning rejects the
+complete set if any of those identities differ between inks, or if a Wave
+row-locked channel does not match its configured screen angle. The set manifest
+stores the parsed identity per ink with the file hashes.
 `tools/check_cmyk_wave_spacing.py` accepts both production styles. For
 equidistant rows it measures final adjacent-gap spread. For fixed baselines it
 reads the emitted row metadata, verifies the final uniform baseline grid,
 checks that the row waveforms remain clear, and treats varying instantaneous
 gaps as the intended depth representation rather than a failure.
+
+### CMYK software-registration release gate
+
+CMYK artwork files include four named corner crosses. Each horizontal/vertical
+arm emits a stable G-code comment with its ID, pre-offset bed-frame centre, and
+declared pen offset:
+
+```text
+(registration mark id=CORNER-NW arm=horizontal
+ center=x,y offset=dx,dy mm)
+```
+
+This is host-side evidence carried inside the program; it adds no controller
+command or machine-side parser. Before Save releases any file, the host reads
+the final planned `G1` text, divides motor-shaft `A` by the emitted theta ratio,
+reverses the active compensation transform, and recovers each arm centre. It
+requires identical mark ID sets and at least four non-collinear marks in every
+selected ink. It then removes the declared pen offset and compares the recovered
+bed-frame points against the selected reference ink.
+
+The release limit is `0.10 mm` maximum residual and `0.05 mm` RMS. The same
+`0.10 mm` is converted at the measured mark radius into a rotation limit and a
+scale limit. These are software-command tolerances, chosen tighter than the
+machine's approximately `0.218 mm` RMS / `0.591 mm` maximum measured physical
+residual so they cannot be confused with a paper-overlay guarantee. A whole
+program translated by `10 mm` must fail.
+
+The audit also proves that each configured pen offset appears in emitted
+geometry exactly once and matches its declared value. G54, compensation profile,
+compensation reserve, pen-radius reserve, planning radius, final fitted scale,
+A-planning identity, and applicable per-ink Wave row angle must agree.
+
+After transactional publication, the host re-reads all four files from disk and
+repeats the audit. The set manifest's `registration_audit` records each ink's
+matched count, centroid, translation, rotation, scale, RMS, maximum residual,
+pen-offset error, and pass/fail state. `<name>-overlay.png` draws the recovered
+mark centres and residual vectors. `software_registration_passed` reports the
+software contract separately from `physical_overlay`, which remains pending a
+four-pen print after one P100 registration. See
+[`ADR-013`](../decisions/ADR-013-gcode-registration-gate.md).
+
 Interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with

@@ -320,6 +320,15 @@ task rather than treated as the active production path.
   after writing and produces a common-frame PNG plus JSON report with identity,
   bounds, centers, path radii, and ink envelopes. It remains a software
   diagnostic; physical four-pen registration is still a paper check.
+  Status 2026-11-27 registration gate: `WSW-20261127-001` adds four named
+  registration crosses, emits their centres and pen offsets into G-code,
+  reverses A rotation and bed compensation from final machine points, and
+  requires matching IDs plus `0.10 mm` maximum / `0.05 mm` RMS software
+  residuals before release. Save audits planned text before writing and the
+  written files again afterward. Manifest version 6 records per-ink centroid,
+  translation, rotation, scale, RMS, maximum residual, pen-offset error, and
+  matched count. A software pass remains separate from the pending four-pen
+  physical sheet.
   Acceptance: print a stationary edge-band verification covering 165.1 to
   184.15 mm at all eight calibrated angles, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle

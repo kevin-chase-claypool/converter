@@ -14,8 +14,8 @@ from .cmyk import CHANNEL_COLORS, CHANNEL_LABELS, CHANNELS, SCREEN_ANGLES_DEG
 from .motion_check import (
     MOVE,
     analyse_gcode,
-    validate_program_set_identity,
 )
+from .gcode_registration import audit_cmyk_gcode_set
 
 
 OVERLAY_SIZE_PX = 1400
@@ -128,6 +128,7 @@ def _expected_overlay_identity(settings):
 def _render_overlay(
     ink_metrics,
     identity,
+    registration,
     reach_mm,
     planning_radius_mm,
     passed,
@@ -236,7 +237,7 @@ def _render_overlay(
     draw = ImageDraw.Draw(base)
     font = _overlay_font(15)
     title_font = _overlay_font(20)
-    title = "CMYK identity/reach audit - " + (
+    title = "CMYK software registration audit - " + (
         "PASS" if passed else "BLOCKED"
     )
     draw.text(
@@ -249,7 +250,8 @@ def _render_overlay(
     profile = identity.get("profile_fingerprint") or "none"
     draw.text(
         (20, 36),
-        "frame %s mm | profile %s | reach %s mm | planning %s mm"
+        "frame %s mm | profile %s | reach %s mm | planning %s mm | "
+        "physical overlay pending"
         % (
             "%.3f,%.3f" % frame_center
             if frame_center is not None
@@ -288,6 +290,80 @@ def _render_overlay(
             font=font,
         )
         legend_y += 18
+    mark_points = {}
+    if registration.get("passed") or registration.get("inks"):
+        reference_channel = registration.get("reference_channel")
+        for mark_id in registration.get("mark_ids", []):
+            reference = (
+                registration.get("inks", {})
+                .get(reference_channel, {})
+                .get("marks", {})
+                .get(mark_id, {})
+                .get("normalized_center_mm")
+            )
+            if reference is None:
+                continue
+            reference_screen = screen_point(reference)
+            for channel in CHANNELS:
+                point = (
+                    registration.get("inks", {})
+                    .get(channel, {})
+                    .get("marks", {})
+                    .get(mark_id, {})
+                    .get("normalized_center_mm")
+                )
+                if point is None:
+                    continue
+                point_screen = screen_point(point)
+                rgb = ImageColor.getrgb(CHANNEL_COLORS[channel])
+                draw.line(
+                    [reference_screen, point_screen],
+                    fill=(*rgb, 230),
+                    width=3,
+                )
+                draw.ellipse(
+                    (
+                        point_screen[0] - 5,
+                        point_screen[1] - 5,
+                        point_screen[0] + 5,
+                        point_screen[1] + 5,
+                    ),
+                    outline=(*rgb, 255),
+                    width=2,
+                )
+                mark_points.setdefault(mark_id, []).append(point_screen)
+    for mark_id, points in mark_points.items():
+        if not points:
+            continue
+        x = min(point[0] for point in points)
+        y = min(point[1] for point in points)
+        draw.text(
+            (x + 7, y + 5),
+            mark_id,
+            fill=(30, 41, 59, 255),
+            font=font,
+        )
+    summary_y = size - 76 if errors else size - 55
+    draw.text(
+        (20, summary_y),
+        "software registration %s | marks %d | max %.3f mm | "
+        "physical test pending"
+        % (
+            "PASS" if registration.get("passed") else "BLOCKED",
+            int(registration.get("mark_count", 0)),
+            max(
+                (
+                    float(ink.get("max_residual_mm", 0.0))
+                    for ink in registration.get("inks", {}).values()
+                ),
+                default=0.0,
+            ),
+        ),
+        fill=(21, 128, 61, 255)
+        if registration.get("passed")
+        else (185, 28, 28, 255),
+        font=font,
+    )
     if errors:
         draw.multiline_text(
             (20, size - 55),
@@ -302,7 +378,12 @@ def _render_overlay(
     os.replace(temporary, path)
 
 
-def write_cmyk_gcode_overlay(program_paths, output_stem, settings):
+def write_cmyk_gcode_overlay(
+    program_paths,
+    output_stem,
+    settings,
+    expected_pen_offsets_mm=None,
+):
     """Audit saved CMYK programs and render them in one machine-frame overlay."""
     programs = {}
     paths = {}
@@ -323,46 +404,15 @@ def write_cmyk_gcode_overlay(program_paths, output_stem, settings):
             for channel, angle in expected_row_angles.items()
             if channel in programs
         }
-    errors = []
-    identity = {}
-    try:
-        identity = validate_program_set_identity(
-            programs,
-            expected_row_angles=expected_row_angles,
-            expected_frame_center_mm=expected["frame_center_mm"],
-            expected_profile_fingerprint=expected[
-                "profile_fingerprint"
-            ],
-            expected_reach_radius_mm=expected[
-                "machine_reach_radius_mm"
-            ],
-        )
-    except ValueError as error:
-        errors.append(str(error))
-        if programs:
-            from .motion_check import gcode_program_identity
-
-            parsed = {
-                channel: gcode_program_identity(text)
-                for channel, text in programs.items()
-            }
-            first = next(iter(parsed.values()))
-            identity = {
-                "frame_center_mm": first["frame_center_mm"],
-                "profile_fingerprint": first["profile_fingerprint"],
-                "machine_reach_radius_mm": first[
-                    "machine_reach_radius_mm"
-                ],
-                "compensation_reserve_mm": first[
-                    "compensation_reserve_mm"
-                ],
-                "pen_radius_mm": first["pen_radius_mm"],
-                "planning_radius_mm": first["planning_radius_mm"],
-                "row_angles_deg": {
-                    channel: value["row_angle_deg"]
-                    for channel, value in parsed.items()
-                },
-            }
+    audit = audit_cmyk_gcode_set(
+        programs,
+        settings,
+        expected_pen_offsets_mm=expected_pen_offsets_mm,
+        expected_row_angles=expected_row_angles,
+    )
+    identity = audit["identity"]
+    registration = audit["registration"]
+    errors = list(audit["errors"])
     reach = identity.get("machine_reach_radius_mm")
     planning_radius = identity.get("planning_radius_mm")
     ink_metrics = {}
@@ -395,6 +445,7 @@ def write_cmyk_gcode_overlay(program_paths, output_stem, settings):
     _render_overlay(
         ink_metrics,
         identity,
+        registration,
         reach,
         planning_radius,
         passed,
@@ -405,16 +456,25 @@ def write_cmyk_gcode_overlay(program_paths, output_stem, settings):
         metrics.pop("_segments", None)
     report = {
         "kind": "cmyk-gcode-overlay-audit",
-        "version": 1,
+        "version": 2,
         "created": datetime.datetime.now().isoformat(timespec="seconds"),
         "scope": [
+            "software_registration",
             "program_identity",
             "machine_frame",
             "machine_reach",
+            "emitted_machine_geometry",
+            "registration_marks",
+            "compensation_inversion",
+            "pen_offset_single_application",
+            "translation_rotation_scale",
         ],
         "passed": passed,
+        "registration_passed": registration.get("passed", False),
+        "physical_overlay": "pending physical four-pen test",
         "errors": errors,
         "identity": identity,
+        "registration": registration,
         "programs": {
             channel: str(paths[channel])
             for channel in programs

@@ -2,7 +2,8 @@
 
 - Status: accepted and implemented; base profile bench-verified, row-locked
   Wave physical verification pending; shared cross-ink translation and
-  fixed-baseline variable-depth software verification implemented
+  fixed-baseline variable-depth and pointwise software-registration gates
+  implemented
 - Date: 2026-10-23
 - Updated: 2026-11-26
 
@@ -154,11 +155,11 @@ program unchanged.
   projection maximum, row angle, and `row_locked_projection` manifest mode.
   It must not be described as applying the raw two-dimensional field.
 - Variable-depth fixed-baseline G-code records the final fitted baseline pitch
-  rather than the tab-local pre-fit pitch. Manifest version 5 records that
-  pitch, per-ink row grids, and whether instantaneous gaps are expected to
-  vary. The final-coordinate checker validates the baseline invariant and the
-  physical pen clearance; variable instantaneous spacing is not equated with
-  raw compensation failure.
+  rather than the tab-local pre-fit pitch. Manifest version 6 records that
+  pitch, per-ink row grids, whether instantaneous gaps are expected to vary,
+  and the pointwise software-registration report. The final-coordinate checker
+  validates the baseline invariant and the physical pen clearance; variable
+  instantaneous spacing is not equated with raw compensation failure.
 - Shared-translation normalization removes the systematic inter-ink global XY
   offset. It does not remove local pointwise differences between the four
   projected fields. On the default profile, relative to yellow, the
@@ -216,6 +217,8 @@ program unchanged.
   `165.100-180.000 mm` annulus remains unverified on paper.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.
-- The four-ink final-machine audit passes, but a physical comparison print is
-  still required to establish whether the retained projected correction
-  improves the printed residual without reintroducing visible row drift.
+- The four-ink final-machine audit now includes named registration marks,
+  compensation inversion, and pointwise translation/rotation/scale checks in
+  addition to identity and reach. A software pass is not a physical-overlay
+  result; the comparison print remains required. See
+  [`ADR-013`](ADR-013-gcode-registration-gate.md).

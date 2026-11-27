@@ -37,6 +37,10 @@ ROW_ANGLE_HEADER = re.compile(
     r"at row angle (-?[\d.]+) deg",
     re.MULTILINE,
 )
+PROGRAM_SCALE_HEADER = re.compile(
+    r"^\(program scale ([\d.]+), A schedule ([A-Za-z0-9_.-]+)\)$",
+    re.MULTILINE,
+)
 
 
 def analyse_gcode(text, settings, tolerance=None):
@@ -183,6 +187,7 @@ def gcode_program_identity(text):
     profile_match = PROFILE_HEADER.search(text)
     reach_match = REACH_HEADER.search(text)
     row_angle_match = ROW_ANGLE_HEADER.search(text)
+    program_scale_match = PROGRAM_SCALE_HEADER.search(text)
     return {
         "has_g54": bool(re.search(r"^G54\s*$", text, re.MULTILINE)),
         "frame_center_mm": (
@@ -223,6 +228,16 @@ def gcode_program_identity(text):
             if row_angle_match is not None
             else None
         ),
+        "final_scale": (
+            float(program_scale_match.group(1))
+            if program_scale_match is not None
+            else None
+        ),
+        "a_schedule_identity": (
+            program_scale_match.group(2)
+            if program_scale_match is not None
+            else None
+        ),
     }
 
 
@@ -255,6 +270,8 @@ def validate_program_set_identity(
         "frame_center_mm",
         "machine_reach_radius_mm",
         "planning_radius_mm",
+        "final_scale",
+        "a_schedule_identity",
     )
     for field in required:
         if reference[field] is None:
@@ -343,6 +360,7 @@ def validate_program_set_identity(
             "compensation_reserve_mm",
             "pen_radius_mm",
             "planning_radius_mm",
+            "final_scale",
         ):
             if abs(identity[field] - reference[field]) > 1e-6:
                 raise ValueError(
@@ -355,6 +373,18 @@ def validate_program_set_identity(
                         reference[field],
                     )
                 )
+        if identity["a_schedule_identity"] != reference[
+            "a_schedule_identity"
+        ]:
+            raise ValueError(
+                "%s A schedule %s differs from %s %s"
+                % (
+                    channel,
+                    identity["a_schedule_identity"],
+                    reference_channel,
+                    reference["a_schedule_identity"],
+                )
+            )
     if expected_row_angles is not None:
         for channel, expected_angle in dict(
             expected_row_angles
@@ -381,6 +411,8 @@ def validate_program_set_identity(
         ],
         "pen_radius_mm": reference["pen_radius_mm"],
         "planning_radius_mm": reference["planning_radius_mm"],
+        "final_scale": reference["final_scale"],
+        "a_schedule_identity": reference["a_schedule_identity"],
         "row_angles_deg": {
             channel: identity["row_angle_deg"]
             for channel, identity in identities.items()

@@ -180,6 +180,18 @@ class Settings:
     row_lock_projection: object | None = field(
         default=None, repr=False, compare=False
     )
+    # G-code identity for a multi-ink set's A-axis scheduling contract. The
+    # per-ink row angles remain screen angles; this field identifies whether
+    # every file used the shared Wave-row schedule family or one fixed bed
+    # orientation, so the final audit cannot mix motion plans silently.
+    a_schedule_identity: str = "per-contour"
+    # Per-ink paper-space corrections used by the CMYK registration audit.
+    # This is derived from the tab recipe rather than a global converter option.
+    registration_pen_offsets_mm: dict = field(
+        default_factory=dict,
+        repr=False,
+        compare=False,
+    )
     # Preserve or reverse the screen generator's row-major contour order.
     # "optimized" keeps the generic nearest-endpoint/2-opt travel planner.
     # The explicit row modes bypass that reordering so each Wave row is

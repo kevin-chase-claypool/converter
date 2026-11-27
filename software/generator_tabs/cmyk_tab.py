@@ -767,10 +767,12 @@ class CmykTab(GeneratorTab):
             )
         self._update_effective_pitch()
         self.registration_marks = QCheckBox("Corner crosses (all inks)")
+        self.registration_marks.setChecked(True)
         self.registration_marks.setToolTip(
             "Draw four small crosses in the page margin, one set per ink "
             "layer, so the four passes can be checked for alignment. Keep "
-            "the sheet still between passes."
+            "the sheet still between passes. Save requires these marks so the "
+            "emitted G-code can prove software registration before release."
         )
         page.addRow("Registration", self.registration_marks)
 
@@ -938,8 +940,14 @@ class CmykTab(GeneratorTab):
     def _translate_marks(self, marks, dx, dy):
         if not dx and not dy:
             return marks
-        return [
-            converter.retag_contour(
+        translated = []
+        for line in marks:
+            registration_center = getattr(
+                line,
+                "registration_mark_center_mm",
+                None,
+            )
+            shifted = converter.retag_contour(
                 line,
                 [(x + dx, y + dy) for x, y in line],
                 point_transform=lambda point: (
@@ -947,8 +955,15 @@ class CmykTab(GeneratorTab):
                     point[1] + dy,
                 ),
             )
-            for line in marks
-        ]
+            if registration_center is not None:
+                # The marker center is the pre-offset reference. The final
+                # audit proves that the path contains exactly one offset by
+                # adding the declared offset to this center itself.
+                shifted.registration_mark_center_mm = tuple(
+                    registration_center
+                )
+            translated.append(shifted)
+        return translated
 
     def apply_auto_settings(self, _checked=False):
         """Fit the Image-options controls to the loaded photo."""
@@ -1116,23 +1131,95 @@ class CmykTab(GeneratorTab):
             f"{self.scale_pct.value():.0f} % artwork scale."
         )
 
-    def _registration_crosses(self):
+    def _registration_crosses(self, channel="c", pen_offset=None):
         """Four small crosses every ink draws, for four-pass alignment."""
         width = self.page_w.value()
         height = self.page_h.value()
         margin = self.margin.value()
         inset = max(2.0, min(margin, 8.0) / 2.0)
         half = max(0.5, min(2.5, inset - 0.4))
+        pen_offset = tuple(pen_offset or (0.0, 0.0))
         crosses = []
-        for cx, cy in (
-            (inset, inset),
-            (width - inset, inset),
-            (inset, height - inset),
-            (width - inset, height - inset),
+        for corner, cx, cy in (
+            ("NW", inset, inset),
+            ("NE", width - inset, inset),
+            ("SW", inset, height - inset),
+            ("SE", width - inset, height - inset),
         ):
-            crosses.append([(cx - half, cy), (cx + half, cy)])
-            crosses.append([(cx, cy - half), (cx, cy + half)])
+            mark_id = "CORNER-" + corner
+            crosses.append(
+                converter.RegistrationMarkTrail(
+                    [(cx - half, cy), (cx + half, cy)],
+                    registration_mark_id=mark_id,
+                    registration_mark_arm="horizontal",
+                    registration_mark_center_mm=(cx, cy),
+                    registration_mark_pen_offset_mm=pen_offset,
+                )
+            )
+            crosses.append(
+                converter.RegistrationMarkTrail(
+                    [(cx, cy - half), (cx, cy + half)],
+                    registration_mark_id=mark_id,
+                    registration_mark_arm="vertical",
+                    registration_mark_center_mm=(cx, cy),
+                    registration_mark_pen_offset_mm=pen_offset,
+                )
+            )
         return crosses
+
+    def _a_schedule_identity(self, settings):
+        """Return one common A-planning identity for the four ink programs."""
+        family = (
+            "shared-wave-row-angle"
+            if (
+                self._wave_spacing_guard_active()
+                and str(settings.theta_mode).strip().lower() != "fixed"
+            )
+            else "fixed-bed-angle"
+            if str(settings.theta_mode).strip().lower() == "fixed"
+            else "per-contour-rotating-bed"
+        )
+        payload = {
+            "family": family,
+            "theta_axis": settings.theta_axis,
+            "theta_offset_deg": settings.theta_offset,
+            "theta_drive_ratio": settings.theta_drive_ratio,
+            "theta_tangential_speed_mm_min": (
+                settings.theta_tangential_speed_mm_min
+            ),
+            "theta_max_rate_deg_min": (
+                settings.theta_controller_limits.max_rate_deg_min
+            ),
+            "theta_max_acceleration_deg_s2": (
+                settings.theta_controller_limits.max_acceleration_deg_s2
+            ),
+            "theta_mode": settings.theta_mode,
+            "theta_resolver": settings.theta_resolver,
+            "theta_weight": settings.theta_weight,
+            "theta_max_step_deg": settings.theta_max_step_deg,
+            "theta_reversal_park_mm": settings.theta_reversal_park_mm,
+            "theta_center_hold_diameter_mm": (
+                settings.theta_center_hold_diameter_mm
+            ),
+            "theta_wrap": settings.theta_wrap,
+            "round_bias": settings.round_bias,
+            "smoothness_factor": settings.smoothness_factor,
+            "theta_smooth_window": settings.theta_smooth_window,
+            "monotonic_theta": settings.monotonic_theta,
+            "contour_order": (
+                self.contour_order.currentData()
+                if self._wave_row_order_active()
+                else "optimized"
+            ),
+        }
+        digest = hashlib.sha256(
+            json.dumps(
+                payload,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()[:12]
+        return "%s-%s" % (family, digest)
 
     def apply_tab_settings(self, settings):
         """Overrides the host applies to this tab's preview and programs.
@@ -1175,6 +1262,11 @@ class CmykTab(GeneratorTab):
                 if self._wave_row_order_active()
                 else "optimized"
             ),
+            a_schedule_identity=self._a_schedule_identity(settings),
+            registration_pen_offsets_mm={
+                channel: tuple(offset)
+                for channel, offset in self._pen_offsets().items()
+            },
         )
         return settings
 
@@ -1932,7 +2024,10 @@ class CmykTab(GeneratorTab):
             # applied to the screened marks about the page centre here.
             marks = scale_polylines(marks, factor, width, height)
             if self.registration_marks.isChecked():
-                marks = list(marks) + self._registration_crosses()
+                marks = list(marks) + self._registration_crosses(
+                    channel,
+                    self._pen_offsets()[channel],
+                )
             # Absolute paper-space corrections for this pen. Applied after
             # scaling so an offset is not multiplied by Artwork scale, and to
             # the registration crosses as well, so a corrected pen brings its
@@ -2239,6 +2334,21 @@ class CmykTab(GeneratorTab):
             self.pass_summary.setText(self._summary_text(results))
             return
         sheet = bool(self.calibration_mode.isChecked())
+        registration_audit = (
+            None if sheet else self._registration_preflight(results)
+        )
+        if (
+            registration_audit is not None
+            and not registration_audit["passed"]
+        ):
+            message = (
+                "CMYK software registration/identity BLOCKED before write: "
+                + "; ".join(registration_audit["errors"])
+            )
+            self.report_error(message)
+            self.cost_label.setText(message)
+            self.pass_summary.setText(self._summary_text(results))
+            return
         stem = ""
         if getattr(self, "_artwork", ""):
             stem = os.path.splitext(os.path.basename(self._artwork))[0]
@@ -2281,6 +2391,7 @@ class CmykTab(GeneratorTab):
                     by_channel,
                     overlay_stem,
                     self._effective_settings(),
+                    expected_pen_offsets_mm=self._pen_offsets(),
                 )
             except Exception as exc:  # noqa: BLE001 - files already exist
                 overlay_error = str(exc)
@@ -2304,13 +2415,14 @@ class CmykTab(GeneratorTab):
             if overlay_report is not None:
                 if overlay_report.get("passed"):
                     overlay_text = (
-                        " Identity/reach PASS (row spacing is checked "
-                        "separately): %s."
+                        " Software registration PASS (physical overlay "
+                        "test pending); identity/reach PASS: %s."
                         % Path(overlay_report["overlay_png"]).name
                     )
                 else:
                     overlay_text = (
-                        " Identity/reach BLOCKED: %s."
+                        " Software registration/identity/reach BLOCKED - do "
+                        "not print this set: %s."
                         % "; ".join(
                             overlay_report.get(
                                 "errors", ["unknown audit error"]
@@ -2326,10 +2438,72 @@ class CmykTab(GeneratorTab):
                 if set_manifest_path
                 else ""
             )
-            self.status.setText(
-                f"Saved {len(written)} G-code files ({names}).{extra}"
-                f"{overlay_text}"
+            if overlay_report is not None and not overlay_report.get(
+                "passed",
+                False,
+            ):
+                self.status.setText(
+                    f"Save verification FAILED ({names}). Files remain for "
+                    f"diagnosis and must not be printed as a CMYK set."
+                    f"{extra}{overlay_text}"
+                )
+            else:
+                self.status.setText(
+                    f"Saved {len(written)} G-code files ({names}).{extra}"
+                    f"{overlay_text}"
+                )
+
+    def _registration_preflight(self, results):
+        """Audit final emitted geometry before any set file is released."""
+        programs = {
+            channel: record["gcode"]
+            for channel, record in results.items()
+        }
+        if not programs:
+            return {
+                "passed": False,
+                "errors": ["no programs selected"],
+                "identity": {},
+                "registration": {
+                    "passed": False,
+                    "errors": ["no programs selected"],
+                    "mark_count": 0,
+                    "inks": {},
+                },
+            }
+        settings = self._effective_settings()
+        first_identity = next(
+            (
+                record.get("identity", {})
+                for record in results.values()
+            ),
+            {},
+        )
+        row_angles = {
+            channel: record.get("identity", {}).get("row_angle_deg")
+            for channel, record in results.items()
+        }
+        expected_row_angles = (
+            row_angles
+            if (
+                settings.row_locked_compensation
+                and all(value is not None for value in row_angles.values())
             )
+            else None
+        )
+        return converter.audit_cmyk_gcode_set(
+            programs,
+            settings,
+            expected_pen_offsets_mm=self._pen_offsets(),
+            expected_row_angles=expected_row_angles,
+            expected_frame_center_mm=first_identity.get(
+                "frame_center_mm"
+            ),
+            expected_profile_fingerprint=first_identity.get(
+                "profile_fingerprint"
+            ),
+            expected_reach_radius_mm=settings.machine_reach_radius_mm,
+        )
 
     def _write_manifest(self, first_path, first_label):
         """Write the calibration manifest next to the saved G-code files."""
@@ -2438,7 +2612,7 @@ class CmykTab(GeneratorTab):
         }[row_pitch_state]
         data = {
             "kind": "cmyk-print-set",
-            "version": 5,
+            "version": 6,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "source": {
                 "file": source_path.name if source_path else "",
@@ -2539,6 +2713,19 @@ class CmykTab(GeneratorTab):
                 for channel, record in results.items()
             },
             "overlay_audit": overlay_report,
+            "registration_audit": (
+                overlay_report.get("registration")
+                if overlay_report is not None
+                else None
+            ),
+            "software_registration_passed": (
+                bool(
+                    overlay_report.get("registration_passed", False)
+                )
+                if overlay_report is not None
+                else False
+            ),
+            "physical_overlay": "pending physical four-pen test",
             "registration_crosses": self.registration_marks.isChecked(),
             "pen_offsets_mm": {
                 channel: list(self._pen_offsets()[channel])

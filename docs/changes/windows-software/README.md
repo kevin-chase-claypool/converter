@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-27 | `WSW-20261127-001` | implemented | [Gate CMYK release on pointwise G-code registration](2026/2026-11-27-cmyk-gcode-registration-gate.md) | `cmyk`, `gcode`, `registration`, `fiducial`, `overlay`, `pen-offset`, `compensation-inversion`, `save-guard`, `manifest`, `physical-validation-pending` |
 | 2026-11-26 | `WSW-20261126-014` | implemented | [Control tonal Wave period while preserving fixed baselines](2026/2026-11-26-fixed-baseline-clearance-wavelength.md) | `cmyk`, `wave-screen`, `fixed-baselines`, `period`, `amplitude`, `depth`, `clearance`, `user-interface`, `regression` |
 | 2026-11-26 | `WSW-20261126-013` | implemented | [Add variable-depth Wave with fixed row baselines](2026/2026-11-26-fixed-baseline-variable-depth-wave.md) | `cmyk`, `wave-screen`, `fixed-baselines`, `variable-depth`, `phase`, `frequency`, `clearance`, `row-lock`, `x-theta`, `manifest` |
 | 2026-11-26 | `WSW-20261126-012` | implemented | [Block saves that do not guarantee Wave row pitch](2026/2026-11-26-wave-row-pitch-ui-preflight.md) | `cmyk`, `wave-screen`, `row-spacing`, `row-lock`, `preflight`, `save-guard`, `user-interface`, `pen-offset` |

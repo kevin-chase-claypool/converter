@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-27 | `WSW-20261127-001` | windows-software | implemented | [Gate CMYK release on pointwise G-code registration](windows-software/2026/2026-11-27-cmyk-gcode-registration-gate.md) |
 | 2026-11-26 | `WSW-20261126-014` | windows-software | implemented | [Control tonal Wave period while preserving fixed baselines](windows-software/2026/2026-11-26-fixed-baseline-clearance-wavelength.md) |
 | 2026-11-26 | `WSW-20261126-013` | windows-software, hardware | implemented | [Add variable-depth Wave with fixed row baselines](windows-software/2026/2026-11-26-fixed-baseline-variable-depth-wave.md) |
 | 2026-11-26 | `WSW-20261126-012` | windows-software | implemented | [Block saves that do not guarantee Wave row pitch](windows-software/2026/2026-11-26-wave-row-pitch-ui-preflight.md) |

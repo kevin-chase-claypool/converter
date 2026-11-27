@@ -1992,10 +1992,48 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
                 if row_depth_intensity is not None
                 else ""
             )
+            registration_id = getattr(
+                points,
+                "registration_mark_id",
+                None,
+            )
+            registration_arm = getattr(
+                points,
+                "registration_mark_arm",
+                None,
+            )
+            registration_center = getattr(
+                points,
+                "registration_mark_center_mm",
+                None,
+            )
+            registration_offset = getattr(
+                points,
+                "registration_mark_pen_offset_mm",
+                None,
+            )
+            registration_attributes = ""
+            if registration_id is not None and registration_center is not None:
+                offset = registration_offset or (0.0, 0.0)
+                registration_attributes = (
+                    ' data-registration-mark="%s"'
+                    ' data-registration-arm="%s"'
+                    ' data-registration-center="%s,%s"'
+                    ' data-registration-pen-offset="%s,%s"'
+                    % (
+                        registration_id,
+                        registration_arm or "unknown",
+                        _fmt(registration_center[0]),
+                        _fmt(registration_center[1]),
+                        _fmt(offset[0]),
+                        _fmt(offset[1]),
+                    )
+                )
             body.append(
                 f"<polyline{row_attribute}{baseline_attribute}"
                 f"{policy_attribute}{period_attribute}"
-                f"{period_variation_attribute}{depth_intensity_attribute} "
+                f"{period_variation_attribute}{depth_intensity_attribute}"
+                f"{registration_attributes} "
                 f"points=\"{pairs}\"/>"
             )
         body.append("</g>")

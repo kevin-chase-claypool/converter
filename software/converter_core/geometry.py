@@ -68,6 +68,36 @@ class WaveTrail(list):
         self.wave_depth_intensity = wave_depth_intensity
 
 
+class RegistrationMarkTrail(list):
+    """One arm of a shared multi-ink registration cross.
+
+    The immutable center is expressed in the bed frame after the current
+    geometry transform but before this ink's pen-offset correction. Keeping it
+    separate lets the final G-code audit prove that the pen offset was applied
+    exactly once instead of trusting the already-transformed path.
+    """
+
+    def __init__(
+        self,
+        points=(),
+        registration_mark_id=None,
+        registration_mark_arm=None,
+        registration_mark_center_mm=None,
+        registration_mark_pen_offset_mm=(0.0, 0.0),
+    ):
+        super().__init__(points)
+        self.registration_mark_id = registration_mark_id
+        self.registration_mark_arm = registration_mark_arm
+        self.registration_mark_center_mm = (
+            tuple(registration_mark_center_mm)
+            if registration_mark_center_mm is not None
+            else None
+        )
+        self.registration_mark_pen_offset_mm = tuple(
+            registration_mark_pen_offset_mm
+        )
+
+
 def retag_contour(source, points, point_transform=None):
     """Rebuild ``points`` as the same tagged contour type when it has one.
 
@@ -88,6 +118,15 @@ def retag_contour(source, points, point_transform=None):
     baseline = getattr(tagged, "wave_baseline_mm", None)
     if point_transform is not None and baseline is not None:
         tagged.wave_baseline_mm = tuple(point_transform(baseline))
+    registration_center = getattr(
+        tagged,
+        "registration_mark_center_mm",
+        None,
+    )
+    if point_transform is not None and registration_center is not None:
+        tagged.registration_mark_center_mm = tuple(
+            point_transform(registration_center)
+        )
     return tagged
 
 
@@ -2184,6 +2223,39 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
                 )
                 for contour in contours
             ]
+    registration_id = element.get("data-registration-mark")
+    registration_arm = element.get("data-registration-arm")
+    registration_center = parse_points(
+        element.get("data-registration-center")
+    )
+    registration_pen_offset = parse_points(
+        element.get("data-registration-pen-offset")
+    )
+    if (
+        registration_id is not None
+        and registration_arm is not None
+        and registration_center
+    ):
+        center = (
+            registration_center[0]
+            if len(registration_center) == 1
+            else None
+        )
+        pen_offset = (
+            registration_pen_offset[0]
+            if len(registration_pen_offset) == 1
+            else (0.0, 0.0)
+        )
+        contours = [
+            RegistrationMarkTrail(
+                contour,
+                registration_mark_id=registration_id,
+                registration_mark_arm=registration_arm,
+                registration_mark_center_mm=center,
+                registration_mark_pen_offset_mm=pen_offset,
+            )
+            for contour in contours
+        ]
     fill_lines = []
     if hatch_spacing > 0:
         fill_polygons = []

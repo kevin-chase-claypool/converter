@@ -600,6 +600,16 @@ class ToolShellTests(unittest.TestCase):
                         tab._layer_files[channel],
                         fitted,
                     )
+                    contours = [
+                        contour
+                        for contour in contours
+                        if getattr(
+                            contour,
+                            "registration_mark_id",
+                            None,
+                        )
+                        is None
+                    ]
                     spans.append(
                         max(self.module.converter.artwork_span(contours))
                     )
