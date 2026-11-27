@@ -642,6 +642,13 @@ task rather than treated as the active production path.
   Status 2026-10-20: implementation and regression tests complete
   (`WSW-20261020-001`; asymmetric 280 % reproduction now 0.00 mm anchor
   spread). Open only for the bench print of the four corner crosses.
+  Status 2026-11-27: close-up photos of all four corners show the four inks
+  within roughly one pen width, with no recurrence of the approximately
+  `10 mm` inter-program offset. Colored-centre separations were roughly
+  `0.4-0.9 mm` when scaled from the current maximum cross span. The separate
+  camera crops and unknown run mode are not sufficient for a calibrated
+  four-corner fit; retain the item until one overhead image with a known scale
+  records the complete sheet.
 
 - [ ] Bench-verify the CMYK per-pen offsets and set preflight.
   Problem: per-ink X/Y offsets, measured-cross conversion and save preflight

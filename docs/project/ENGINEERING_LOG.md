@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261127-cmyk-registration-cross-photo-review"></a>
+### 🟨 2026-11-27 - HARDWARE/MEASURED - CMYK paper crosses show sub-millimeter registration
+
+- Reviewed four close-up physical photographs of the NE, SE, SW, and NW CMYK
+  registration crosses.
+- All four inks overlapped inside approximately one pen width at every corner;
+  the previous approximately `10 mm` whole-program shift is absent.
+- Using the black cross span as the local scale, colored-centre separations were
+  about `4-9 %` of that span. Assuming the current maximum `10 mm` cross span,
+  the rough separation is `0.4-0.9 mm`; ink spread and camera framing prevent a
+  tighter number.
+- SE was closest. NW showed the largest visible colored fringe; NE and SW were
+  intermediate.
+- The four photographs use different crops, zoom, and camera orientation. They
+  cannot distinguish a page-frame translation from rotation, scale, or local
+  bed error, and they do not replace a calibrated four-corner overhead image.
+- Gross physical registration is confirmed, but the evidence is not sufficient
+  to close the physical-overlay acceptance item or to claim the `0.10 mm`
+  software limit physically.
+- Evidence:
+  `docs/report/lab-notes/2026-11-27-cmyk-registration-cross-photo-review.md`.
+- Category: hardware, windows-software, cmyk, registration, physical-overlay,
+  photo-review, sub-millimeter, measurement-caveat.
+
 <a id="elog-20261127-cmyk-preview-registration-crosses"></a>
 ### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Keep CMYK registration crosses visible after automatic fit
 
