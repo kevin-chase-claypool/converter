@@ -147,11 +147,14 @@ class ProgramAnalysisWorker(QObject):
                 data = self.host.analyze_program(
                     svg_path, channel_settings, self.is_cancelled
                 )
+                final_settings = data.get("settings", channel_settings)
                 moves = data["moves"]
                 estimate = converter.estimate_program_time(moves, self.scale)
                 counts = estimate["strategy_counts"]
                 lengths = estimate["strategy_mm"]
-                checks = converter.analyse_gcode(data["gcode"], self.settings)
+                checks = converter.analyse_gcode(
+                    data["gcode"], final_settings
+                )
                 record = {
                     "marks": len(data["contours"]),
                     "moves": len(moves),
@@ -167,6 +170,24 @@ class ProgramAnalysisWorker(QObject):
                     "draw_mm": estimate["draw_mm"],
                     "seconds": estimate["total_seconds"],
                     "checks": checks,
+                    "final_scale": float(
+                        getattr(final_settings, "scale", 1.0)
+                    ),
+                    "fit_mode": str(
+                        getattr(final_settings, "fit_mode", "manual")
+                    ),
+                    "frame_center_mm": (
+                        tuple(final_settings.frame_center_mm)
+                        if getattr(
+                            final_settings,
+                            "frame_center_mm",
+                            None,
+                        ) is not None
+                        else None
+                    ),
+                    "wave_baseline_grid": data.get(
+                        "wave_baseline_grid"
+                    ),
                 }
                 compensation = data.get("bed_compensation")
                 if getattr(compensation, "row_locked", False):
@@ -207,7 +228,14 @@ class ProgramAnalysisWorker(QObject):
                     if row_lock_set is not None
                     else None
                 ),
-                expected_frame_center_mm=self.settings.frame_center_mm,
+                expected_frame_center_mm=next(
+                    (
+                        record["frame_center_mm"]
+                        for record in results.values()
+                        if record.get("frame_center_mm") is not None
+                    ),
+                    self.settings.frame_center_mm,
+                ),
                 expected_profile_fingerprint=(
                     base_profile.fingerprint
                     if base_profile is not None
@@ -344,6 +372,10 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
         self.style.addItem(
+            "Variable-depth Wave - fixed baselines",
+            "waves_fixed",
+        )
+        self.style.addItem(
             "Wave screen - legacy phase-locked depth (diagnostic)",
             "waves_zero",
         )
@@ -355,12 +387,13 @@ class CmykTab(GeneratorTab):
             "wave, gyroid, TSP and contour styles use the same pitch as "
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region. "
-            "Wave screen translates one common waveform to every row, so "
-            "adjacent rows remain exactly one pitch apart. The explicitly "
-            "labeled legacy diagnostic restores tone-varying row depth while "
-            "keeping the selected bed-compensation profile. Stored legacy "
-            "values from older settings are promoted to this layout when "
-            "regenerated."
+            "Wave screen - equidistant rows translates one common waveform "
+            "to every row. Variable-depth Wave keeps the same equally spaced "
+            "row baselines but lets scene depth vary each row's waveform, so "
+            "visible gaps vary by design. The explicitly labeled legacy "
+            "diagnostic restores the old raw-compensation comparison. Stored "
+            "legacy values from older settings are promoted to an "
+            "equidistant layout when regenerated."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -390,14 +423,13 @@ class CmykTab(GeneratorTab):
         )
         self.preserve_wave_pitch.setChecked(True)
         self.preserve_wave_pitch.setToolTip(
-            "Wave screen - equidistant rows projects the full measured "
-            "bed-compensation mesh onto one displacement common to every "
-            "parallel row. Compatible positional correction remains active "
-            "while the final row pitch stays exact. With Xθ/Yθ plus "
-            "an explicit row order, all rows also share one bed-angle schedule "
-            "and spacing-aware subdivision so rotating-bed interpolation "
-            "cannot compress the row pitch. Uncheck only to apply the raw "
-            "two-dimensional field and accept non-uniform rows."
+            "Wave screens project the full measured bed-compensation mesh onto "
+            "one displacement common to every parallel row. Compatible "
+            "positional correction remains active while the row baselines "
+            "stay fixed. With Xθ/Yθ plus an explicit row order, all rows also "
+            "share one bed-angle schedule and spacing-aware subdivision. "
+            "Uncheck only to apply the raw two-dimensional field and accept "
+            "nonuniform baselines."
         )
         screen.addRow("Spacing guard", self.preserve_wave_pitch)
         self.row_pitch_status = QLabel()
@@ -409,11 +441,10 @@ class CmykTab(GeneratorTab):
         )
         self.vary_wave_frequency.setChecked(True)
         self.vary_wave_frequency.setToolTip(
-            "Smoothly varies the Wave carrier frequency across the artwork "
-            "while keeping one phase and vertical displacement shared by "
-            "every row. This reduces fixed vertical crest/trough banding "
-            "without changing row-to-row pitch. It does not apply to the "
-            "legacy tone-varying diagnostic."
+            "Smoothly varies the Wave carrier frequency across the artwork. "
+            "For equidistant rows the phase and displacement remain shared; "
+            "for fixed-baseline depth each row also responds to its local "
+            "scene depth. It does not apply to the legacy diagnostic."
         )
         screen.addRow("Wave carrier", self.vary_wave_frequency)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -834,6 +865,10 @@ class CmykTab(GeneratorTab):
             converter.retag_contour(
                 line,
                 [(x + dx, y + dy) for x, y in line],
+                point_transform=lambda point: (
+                    point[0] + dx,
+                    point[1] + dy,
+                ),
             )
             for line in marks
         ]
@@ -896,7 +931,12 @@ class CmykTab(GeneratorTab):
     def pen_clearance_mm(self):
         """Minimum on-paper centre-line clearance for the active screen."""
         clearance = max(0.0, self.pen_width.value())
-        if self.style.currentData() in ("waves", "waves_even", "waves_zero"):
+        if self.style.currentData() in (
+            "waves",
+            "waves_even",
+            "waves_fixed",
+            "waves_zero",
+        ):
             clearance += converter.WAVE_MIN_EDGE_GAP_MM
         return clearance
 
@@ -975,6 +1015,11 @@ class CmykTab(GeneratorTab):
             settings,
             tolerance=self.path_tolerance.value(),
             pen_diameter_mm=self.pen_width.value(),
+            compensate_pen_width=(
+                False
+                if self.style.currentData() == "waves_fixed"
+                else settings.compensate_pen_width
+            ),
             theta_mode=self.theta_mode.value(),
             theta_center_hold_diameter_mm=self.center_hold.value(),
             fit_frame_mm=(
@@ -1283,10 +1328,14 @@ class CmykTab(GeneratorTab):
         return warnings
 
     def _wave_screen_active(self):
-        """Whether the selected screen promises a parallel Wave row lattice."""
+        """Whether the selected screen uses fixed Wave row baselines."""
         return (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() in ("waves_even", "waves_zero")
+            and self.style.currentData() in (
+                "waves_even",
+                "waves_fixed",
+                "waves_zero",
+            )
         )
 
     def _wave_output_block_reason(self):
@@ -1299,7 +1348,7 @@ class CmykTab(GeneratorTab):
                 "legacy diagnostic - raw selected profile can vary row pitch"
             )
         if not self._wave_spacing_guard_active():
-            return "OFF - raw compensation may alter pitch"
+            return "OFF - raw compensation may alter the row baselines"
         if (
             self.theta_mode.value() != "fixed"
             and self.contour_order.currentData()
@@ -1327,8 +1376,16 @@ class CmykTab(GeneratorTab):
             )
             return (
                 "pass",
-                "PASS: equidistant rows and row-lock bed compensation are "
-                f"enforced.{shared}",
+                (
+                    "PASS: row-local depth with fixed, equally spaced "
+                    "baselines is valid. Visible wavy gaps vary by design; "
+                    "row-lock bed compensation is enforced."
+                    if self.style.currentData() == "waves_fixed"
+                    else
+                    "PASS: equidistant rows and row-lock bed compensation "
+                    "are enforced."
+                )
+                + shared,
             )
         if self.allow_nonuniform_wave_output.isChecked():
             return (
@@ -1338,9 +1395,9 @@ class CmykTab(GeneratorTab):
             )
         return (
             "blocked",
-            "NOT EQUIDISTANT: Save is blocked because "
-            f"{reason}. Choose Wave screen - equidistant rows, enable the "
-            "spacing guard, and use Rows ascending or Rows descending.",
+            "WAVE BASELINE INVALID: Save is blocked because "
+            f"{reason}. Choose a production Wave mode, enable the spacing "
+            "guard, and use Rows ascending or Rows descending for Xθ/Yθ.",
         )
 
     def _refresh_row_pitch_status(self):
@@ -1393,6 +1450,13 @@ class CmykTab(GeneratorTab):
             ):
                 continue
             label = converter.CHANNEL_LABELS[channel][0]
+            if (
+                self.style.currentData() == "waves_fixed"
+                and "Wave fixed baselines" not in text
+            ):
+                errors.append(
+                    f"{label}: final G-code has no fixed-baseline Wave header"
+                )
             if active_profile and "row-locked projection" not in text:
                 errors.append(
                     f"{label}: final G-code has no row-locked projection header"
@@ -1407,7 +1471,7 @@ class CmykTab(GeneratorTab):
         """Whether to project compensation onto the Wave row lattice."""
         return (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() == "waves_even"
+            and self.style.currentData() in ("waves_even", "waves_fixed")
             and self.preserve_wave_pitch.isChecked()
         )
 
@@ -1417,12 +1481,29 @@ class CmykTab(GeneratorTab):
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
         )
+        fixed_baseline_selected = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_fixed"
+        )
         wave_selected = (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() in ("waves_even", "waves_zero")
+            and self.style.currentData() in (
+                "waves_even",
+                "waves_fixed",
+                "waves_zero",
+            )
         )
-        self.preserve_wave_pitch.setEnabled(equal_wave_selected)
-        self.vary_wave_frequency.setEnabled(equal_wave_selected)
+        self.preserve_wave_pitch.setText(
+            "Preserve fixed row baselines (row-lock bed compensation)"
+            if fixed_baseline_selected
+            else "Preserve exact row pitch (row-lock bed compensation)"
+        )
+        self.preserve_wave_pitch.setEnabled(
+            equal_wave_selected or fixed_baseline_selected
+        )
+        self.vary_wave_frequency.setEnabled(
+            equal_wave_selected or fixed_baseline_selected
+        )
         self.contour_order.setEnabled(wave_selected)
         nonuniform_wave = bool(self._wave_output_block_reason())
         self.allow_nonuniform_wave_output.setVisible(nonuniform_wave)
@@ -1436,7 +1517,7 @@ class CmykTab(GeneratorTab):
         """Whether the production Wave carrier varies frequency."""
         return (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() == "waves_even"
+            and self.style.currentData() in ("waves_even", "waves_fixed")
             and self.vary_wave_frequency.isChecked()
         )
 
@@ -1444,7 +1525,11 @@ class CmykTab(GeneratorTab):
         """Whether Wave output uses the explicit monotonic source order."""
         return (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() in ("waves_even", "waves_zero")
+            and self.style.currentData() in (
+                "waves_even",
+                "waves_fixed",
+                "waves_zero",
+            )
             and self.contour_order.currentData() != "optimized"
         )
 
@@ -2044,6 +2129,36 @@ class CmykTab(GeneratorTab):
         factor = self.scale_pct.value() / 100.0
         weights = self._weights()
         style = self.style.currentData()
+        channel_wave_grids = {
+            channel: results[channel].get("wave_baseline_grid")
+            for channel in converter.CHANNELS
+            if channel in results
+            and isinstance(
+                results[channel].get("wave_baseline_grid"),
+                dict,
+            )
+        }
+        final_pitches = sorted(
+            float(grid["pitch_mm"])
+            for grid in channel_wave_grids.values()
+            if grid.get("pitch_mm") is not None
+        )
+        final_baseline_pitch = (
+            final_pitches[len(final_pitches) // 2]
+            if final_pitches
+            else self.pitch.value() * factor
+        )
+        final_scales = sorted(
+            float(results[channel].get("final_scale", 1.0))
+            for channel in converter.CHANNELS
+            if channel in results
+        )
+        final_fit_scale = (
+            final_scales[len(final_scales) // 2]
+            if final_scales
+            else 1.0
+        )
+        fixed_baseline_mode = style in ("waves_even", "waves_fixed")
         source_value = getattr(self, "_artwork", "")
         if not source_value:
             artwork_path = getattr(self.host, "artwork_path", None)
@@ -2090,7 +2205,7 @@ class CmykTab(GeneratorTab):
         }[row_pitch_state]
         data = {
             "kind": "cmyk-print-set",
-            "version": 4,
+            "version": 5,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "source": {
                 "file": source_path.name if source_path else "",
@@ -2105,10 +2220,19 @@ class CmykTab(GeneratorTab):
                 "height_mm": self.page_h.value(),
                 "margin_mm": self.margin.value(),
             },
-            "frame_center_mm": [
-                self.page_w.value() / 2.0,
-                self.page_h.value() / 2.0,
-            ],
+            "frame_center_mm": list(
+                next(
+                    (
+                        record["frame_center_mm"]
+                        for record in results.values()
+                        if record.get("frame_center_mm") is not None
+                    ),
+                    (
+                        self.page_w.value() / 2.0,
+                        self.page_h.value() / 2.0,
+                    ),
+                )
+            ),
             "bed_motion": self._bed_motion_label(),
             "center_hold_diameter_mm": self.center_hold.value(),
             "theta_mode": settings.theta_mode,
@@ -2192,12 +2316,38 @@ class CmykTab(GeneratorTab):
                 "style_label": self.style.currentText(),
                 "dot_pitch_mm": self.pitch.value(),
                 "artwork_scale_pct": self.scale_pct.value(),
-                "effective_pitch_mm": self.pitch.value() * factor,
+                "effective_pitch_mm": (
+                    final_baseline_pitch
+                    if fixed_baseline_mode
+                    else self.pitch.value() * factor
+                ),
+                "tab_effective_pitch_before_fit_mm": (
+                    self.pitch.value() * factor
+                ),
+                "final_baseline_pitch_mm": final_baseline_pitch,
+                "final_fit_scale": final_fit_scale,
+                "row_layout": (
+                    "fixed_baselines_variable_instantaneous_gaps"
+                    if style == "waves_fixed"
+                    else "translated_rows_constant_instantaneous_gaps"
+                    if style == "waves_even"
+                    else "not_applicable"
+                ),
                 "preserve_exact_row_pitch": (
-                    self._wave_spacing_guard_active()
+                    style == "waves_even"
+                    and self._wave_spacing_guard_active()
+                ),
+                "preserve_fixed_row_baselines": (
+                    fixed_baseline_mode
+                    and self._wave_spacing_guard_active()
                 ),
                 "wave_frequency_mode": (
-                    "shared_phase_modulated"
+                    "row_local_depth_modulated"
+                    if (
+                        self._variable_wave_frequency_active()
+                        and style == "waves_fixed"
+                    )
+                    else "shared_phase_modulated"
                     if self._variable_wave_frequency_active()
                     else "constant"
                 ),
@@ -2227,9 +2377,35 @@ class CmykTab(GeneratorTab):
                 "wave_phase_mode": {
                     "waves": "bounded_row_depth",
                     "waves_even": "identical_translated_rows",
+                    "waves_fixed": "row_local_fixed_baseline_depth",
                     "waves_zero": "shared_zero_anchored",
                 }.get(style),
             },
+            "wave_baseline_grid": (
+                {
+                    "mode": (
+                        "fixed_baselines"
+                        if style == "waves_fixed"
+                        else "constant_baselines"
+                    ),
+                    "pitch_mm": final_baseline_pitch,
+                    "tab_effective_pitch_before_fit_mm": (
+                        self.pitch.value() * factor
+                    ),
+                    "final_fit_scale": final_fit_scale,
+                    "instantaneous_gap_semantics": (
+                        "varies_by_design"
+                        if style == "waves_fixed"
+                        else "constant"
+                    ),
+                    "per_channel": {
+                        channel: dict(grid)
+                        for channel, grid in channel_wave_grids.items()
+                    },
+                }
+                if fixed_baseline_mode
+                else None
+            ),
             "ink_processing": {
                 "auto_levels": self.auto_levels.isChecked(),
                 "saturation_pct": self.saturation.value(),

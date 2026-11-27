@@ -45,17 +45,31 @@ class FillTrail(list):
 class WaveTrail(list):
     """A screen row carrying its exact source row index through SVG parsing."""
 
-    def __init__(self, points=(), wave_row_index=None):
+    def __init__(
+        self,
+        points=(),
+        wave_row_index=None,
+        wave_baseline_mm=None,
+        wave_row_policy=None,
+    ):
         super().__init__(points)
         self.wave_row_index = wave_row_index
+        self.wave_baseline_mm = (
+            tuple(wave_baseline_mm)
+            if wave_baseline_mm is not None
+            else None
+        )
+        self.wave_row_policy = wave_row_policy
 
 
-def retag_contour(source, points):
+def retag_contour(source, points, point_transform=None):
     """Rebuild ``points`` as the same tagged contour type when it has one.
 
     ``FillTrail`` carries the keep-down-bridging tag and the CMYK preview adds
     ``InkTrail`` for per-ink colours, so the source type and its attributes
-    must survive transforms instead of being normalized to a plain list.
+    must survive transforms instead of being normalized to a plain list. When
+    supplied, ``point_transform`` also moves Wave baseline metadata with the
+    contour so a final G-code checker can identify the unchanged baseline grid.
     """
     points = list(points)
     if type(source) is list:
@@ -65,6 +79,9 @@ def retag_contour(source, points):
     except Exception:
         tagged = FillTrail(points)
     tagged.__dict__.update(getattr(source, "__dict__", {}))
+    baseline = getattr(tagged, "wave_baseline_mm", None)
+    if point_transform is not None and baseline is not None:
+        tagged.wave_baseline_mm = tuple(point_transform(baseline))
     return tagged
 
 
@@ -2119,6 +2136,7 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             steps = max(24, min(360, int(2 * math.pi * max(rx, ry) / max(tolerance, 0.01))))
             contours = [[(cx + rx * math.cos(2 * math.pi * n / steps), cy + ry * math.sin(2 * math.pi * n / steps)) for n in range(steps + 1)]]
     row_index = element.get("data-wave-row")
+    row_baseline = parse_points(element.get("data-wave-baseline"))
     if row_index is not None:
         try:
             parsed_row_index = int(row_index)
@@ -2126,7 +2144,16 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             parsed_row_index = None
         if parsed_row_index is not None:
             contours = [
-                WaveTrail(contour, wave_row_index=parsed_row_index)
+                WaveTrail(
+                    contour,
+                    wave_row_index=parsed_row_index,
+                    wave_baseline_mm=(
+                        row_baseline[0]
+                        if len(row_baseline) == 1
+                        else None
+                    ),
+                    wave_row_policy=element.get("data-wave-policy"),
+                )
                 for contour in contours
             ]
     fill_lines = []
@@ -2215,19 +2242,42 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
             return
         for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved, stats, gradient_amplitude_pct, gradient_density_pct, unit_per_mm=coarsen):
             check_cancelled(cancel_check)
-            contours.append(retag_contour(contour, [combined.apply(x, y) for x, y in contour]))
+            contours.append(
+                retag_contour(
+                    contour,
+                    [combined.apply(x, y) for x, y in contour],
+                    point_transform=lambda point: combined.apply(*point),
+                )
+            )
         for child in list(node):
             walk(child, combined, resolved, referenced, seen)
 
     walk(root, Matrix(), {})
     if flip_y:
         source_height = view_box_height or height or max((y for contour in contours for _, y in contour), default=0.0)
-        contours = [retag_contour(contour, [(x, source_height - y) for x, y in contour]) for contour in contours]
+        contours = [
+            retag_contour(
+                contour,
+                [(x, source_height - y) for x, y in contour],
+                point_transform=lambda point: (point[0], source_height - point[1]),
+            )
+            for contour in contours
+        ]
     return contours
 
 
 def apply_geometry_settings(contours, settings):
-    contours = [retag_contour(contour, [(x * settings.scale, y * settings.scale) for x, y in contour]) for contour in contours]
+    contours = [
+        retag_contour(
+            contour,
+            [(x * settings.scale, y * settings.scale) for x, y in contour],
+            point_transform=lambda point: (
+                point[0] * settings.scale,
+                point[1] * settings.scale,
+            ),
+        )
+        for contour in contours
+    ]
     # In on-paper space, drop sub-pen-width fragments (clipped infill slivers
     # and trace specks) that only add an M3/M5 "dot" with no visible value.
     contours = [contour for contour in contours if sum(distance(a, b) for a, b in zip(contour, contour[1:])) >= MIN_FILL_SEGMENT_LENGTH]
@@ -2354,7 +2404,20 @@ def compensate_physical_pen_width(contours, pen_diameter):
     # not square.
     scale = min(sx, sy)
     return [
-        retag_contour(contour, [(center_x + (x - center_x) * scale, center_y + (y - center_y) * scale) for x, y in contour])
+        retag_contour(
+            contour,
+            [
+                (
+                    center_x + (x - center_x) * scale,
+                    center_y + (y - center_y) * scale,
+                )
+                for x, y in contour
+            ],
+            point_transform=lambda point: (
+                center_x + (point[0] - center_x) * scale,
+                center_y + (point[1] - center_y) * scale,
+            ),
+        )
         for contour in contours
     ]
 

@@ -19,11 +19,32 @@ import hashlib
 import json
 import math
 import re
+import sys
 from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "software"))
+
+from converter_core.cmyk import (
+    _polyline_pair_is_clear,
+    _polyline_segments,
+)
 
 
 WORD = re.compile(r"([XYA])(-?\d+(?:\.\d+)?)", re.IGNORECASE)
 THETA_RATIO = re.compile(r"theta ratio\s+([\d.]+)", re.IGNORECASE)
+WAVE_ROW = re.compile(
+    r"\(wave row\s+(\d+)\s+baseline\s+"
+    r"(-?\d+(?:\.\d+)?)\s+mm\)",
+    re.IGNORECASE,
+)
+FIXED_BASELINE_HEADER = re.compile(
+    r"\(Wave fixed baselines:\s*pitch\s+([\d.]+)\s+mm,\s*"
+    r"origin\s+(-?[\d.]+)\s+mm,\s*rows\s+(\d+),\s*"
+    r"screen angle\s+(-?[\d.]+)\s+deg",
+    re.IGNORECASE,
+)
 LABELS = {
     "c": "cyan",
     "m": "magenta",
@@ -49,10 +70,45 @@ def load_manifest(path: Path) -> dict:
             "rotating-bed manifest does not record the shared row-angle lock"
         )
     screen = data.get("screen", {})
-    if screen.get("style") != "waves_even":
-        raise ValueError("manifest screen style is not waves_even")
-    if screen.get("preserve_exact_row_pitch") is not True:
+    style = screen.get("style")
+    if style not in ("waves_even", "waves_fixed"):
+        raise ValueError(
+            "manifest screen style is not a production Wave baseline mode"
+        )
+    if style == "waves_even" and screen.get("preserve_exact_row_pitch") is not True:
         raise ValueError("manifest does not record an active row-spacing guard")
+    if (
+        style == "waves_fixed"
+        and screen.get("preserve_fixed_row_baselines") is not True
+    ):
+        raise ValueError(
+            "manifest does not record an active fixed-baseline guard"
+        )
+    if style == "waves_fixed":
+        grid = data.get("wave_baseline_grid")
+        if not isinstance(grid, dict):
+            raise ValueError(
+                "fixed-baseline manifest has no machine-readable baseline grid"
+            )
+        if grid.get("mode") != "fixed_baselines":
+            raise ValueError(
+                "fixed-baseline manifest has the wrong baseline-grid mode"
+            )
+        if (
+            grid.get("instantaneous_gap_semantics")
+            != "varies_by_design"
+        ):
+            raise ValueError(
+                "fixed-baseline manifest does not classify variable "
+                "instantaneous gaps as intentional"
+            )
+        try:
+            if float(grid["pitch_mm"]) <= 0.0:
+                raise ValueError
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError(
+                "fixed-baseline manifest has no positive final pitch"
+            ) from error
     compensation_path = data.get("bed_compensation_path", "")
     if compensation_path:
         compensation = data.get("bed_compensation", {})
@@ -157,6 +213,240 @@ def drawing_contours(
                     )
             x, y, a = next_x, next_y, next_a
     return [contour for contour in contours if len(contour) > 1]
+
+
+def annotated_drawing_contours(
+    path: Path,
+    sample_steps: int = 1,
+) -> list[dict]:
+    """Return pen-down contours with their emitted fixed-row annotations."""
+    sample_steps = max(1, int(sample_steps))
+    contours: list[dict] = []
+    current = None
+    pending_row = None
+    pending_baseline = None
+    x = y = a = 0.0
+    for raw_line in path.read_text(
+        encoding="utf-8", errors="replace"
+    ).splitlines():
+        line = raw_line.strip()
+        row_match = WAVE_ROW.match(line)
+        if row_match:
+            pending_row = int(row_match.group(1))
+            pending_baseline = float(row_match.group(2))
+            continue
+        if line.startswith("M3"):
+            current = {
+                "points": [],
+                "row_index": pending_row,
+                "baseline_mm": pending_baseline,
+            }
+            contours.append(current)
+            pending_row = None
+            pending_baseline = None
+            continue
+        if line.startswith("M5"):
+            current = None
+            continue
+        if not line.startswith(("G0 ", "G1 ")):
+            continue
+        words = {
+            key.upper(): float(value)
+            for key, value in WORD.findall(line)
+        }
+        next_x = words.get("X", x)
+        next_y = words.get("Y", y)
+        next_a = words.get("A", a)
+        if current is not None and words:
+            for index in range(sample_steps + 1):
+                fraction = index / sample_steps
+                current["points"].append(
+                    (
+                        x + fraction * (next_x - x),
+                        y + fraction * (next_y - y),
+                        a + fraction * (next_a - a),
+                    )
+                )
+        x, y, a = next_x, next_y, next_a
+    return [
+        contour
+        for contour in contours
+        if len(contour["points"]) > 1
+    ]
+
+
+def _screen_points(points, angle_deg):
+    theta = math.radians(-angle_deg)
+    cosine = math.cos(theta)
+    sine = math.sin(theta)
+    return [
+        (
+            x_value * cosine + y_value * sine,
+            -x_value * sine + y_value * cosine,
+        )
+        for x_value, y_value in points
+    ]
+
+
+def _row_grid(row_baselines):
+    rows = sorted(
+        (
+            int(row_index),
+            float(
+                sorted(values)[len(values) // 2]
+            ),
+        )
+        for row_index, values in row_baselines.items()
+    )
+    if len(rows) < 2:
+        raise ValueError("fixed-baseline output has fewer than two rows")
+    first_index, first_baseline = rows[0]
+    last_index, last_baseline = rows[-1]
+    if last_index <= first_index:
+        raise ValueError("fixed-baseline row indices are not increasing")
+    pitch = (last_baseline - first_baseline) / (
+        last_index - first_index
+    )
+    if abs(pitch) <= 1e-9:
+        raise ValueError("fixed-baseline row pitch is zero")
+    origin = first_baseline - first_index * pitch
+    residual = max(
+        abs(baseline - (origin + row_index * pitch))
+        for row_index, baseline in rows
+    )
+    return {
+        "pitch_mm": abs(pitch),
+        "origin_mm": origin,
+        "rows": len(rows),
+        "residual_mm": residual,
+    }
+
+
+def audit_fixed_baseline_program(
+    path: Path,
+    angle_deg: float,
+    expected_pitch_mm: float,
+    expected_origin_mm: float | None = None,
+    sample_columns: int = 199,
+    *,
+    rotating_bed: bool = False,
+    ratio: float = 1.0,
+    minimum_clearance_mm: float = 0.0,
+) -> dict[str, float | int]:
+    """Validate fixed row baselines and variable per-row final waveforms."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    header = FIXED_BASELINE_HEADER.search(text)
+    if not header:
+        raise ValueError(f"{path.name} has no fixed-baseline Wave header")
+    header_pitch = float(header.group(1))
+    header_origin = float(header.group(2))
+    header_rows = int(header.group(3))
+    header_angle = float(header.group(4))
+    if abs(header_pitch - float(expected_pitch_mm)) > 0.005:
+        raise ValueError(
+            f"{path.name} final baseline pitch does not match the manifest"
+        )
+    if (
+        expected_origin_mm is not None
+        and abs(header_origin - float(expected_origin_mm)) > 0.005
+    ):
+        raise ValueError(
+            f"{path.name} final baseline origin does not match the manifest"
+        )
+    expected_header_angle = -float(angle_deg)
+    angle_difference = (
+        header_angle - expected_header_angle + 90.0
+    ) % 180.0 - 90.0
+    if abs(angle_difference) > 0.005:
+        raise ValueError(
+            f"{path.name} final baseline screen angle does not match "
+            "the manifest"
+        )
+
+    contours = annotated_drawing_contours(
+        path,
+        sample_steps=9 if rotating_bed else 1,
+    )
+    row_baselines: dict[int, list[float]] = {}
+    row_fragments: dict[int, list[list[tuple[float, float]]]] = {}
+    screen_fragments = []
+    ratio = max(float(ratio), 1e-12)
+    for contour in contours:
+        row_index = contour["row_index"]
+        baseline = contour["baseline_mm"]
+        if row_index is None or baseline is None:
+            continue
+        row_baselines.setdefault(int(row_index), []).append(float(baseline))
+        bed_points = (
+            [
+                _machine_to_bed_point(x_value, y_value, a_value, ratio)[
+                    :2
+                ]
+                for x_value, y_value, a_value in contour["points"]
+            ]
+            if rotating_bed
+            else [
+                (x_value, y_value)
+                for x_value, y_value, _a_value in contour["points"]
+            ]
+        )
+        screen = _screen_points(bed_points, angle_deg)
+        row_fragments.setdefault(int(row_index), []).append(screen)
+        screen_fragments.append(screen)
+    if len(row_baselines) < 2:
+        raise ValueError(
+            f"{path.name} has no emitted fixed-baseline row annotations"
+        )
+    if len(row_baselines) != header_rows:
+        raise ValueError(
+            f"{path.name} baseline row count does not match its header"
+        )
+
+    grid = _row_grid(row_baselines)
+    if abs(float(grid["pitch_mm"]) - float(expected_pitch_mm)) > 0.005:
+        raise ValueError(
+            f"{path.name} emitted baseline pitch does not match the manifest"
+        )
+    if float(grid["residual_mm"]) > 0.005:
+        raise ValueError(
+            f"{path.name} fixed row baselines are not uniformly spaced"
+        )
+
+    if minimum_clearance_mm > 0.0:
+        ordered_rows = sorted(row_fragments)
+        for first_row, second_row in zip(
+            ordered_rows,
+            ordered_rows[1:],
+        ):
+            for first in row_fragments[first_row]:
+                for second in row_fragments[second_row]:
+                    if not _polyline_pair_is_clear(
+                        _polyline_segments(first),
+                        _polyline_segments(second),
+                        float(minimum_clearance_mm),
+                    ):
+                        raise ValueError(
+                            f"{path.name} fixed-baseline rows touch or cross"
+                        )
+
+    ranges = sorted(
+        max(value for _along, value in fragment)
+        - min(value for _along, value in fragment)
+        for fragment in screen_fragments
+        if len(fragment) > 1
+    )
+    if not ranges:
+        raise ValueError(f"{path.name} has no visible fixed-baseline rows")
+    return {
+        "samples": max(0, int(sample_columns)),
+        "measurements": len(row_fragments),
+        "pitch_mm": float(grid["pitch_mm"]),
+        "origin_mm": float(grid["origin_mm"]),
+        "rows": len(row_baselines),
+        "baseline_residual_mm": float(grid["residual_mm"]),
+        "minimum_wave_range_mm": ranges[0],
+        "maximum_wave_range_mm": ranges[-1],
+    }
 
 
 def _value_at_x(
@@ -296,8 +586,22 @@ def main(argv: list[str] | None = None) -> int:
         print("FAIL: %s" % error)
         return 2
     base = args.manifest.parent
-    pitch = float(data["screen"]["effective_pitch_mm"])
+    screen = data["screen"]
+    style = screen["style"]
+    pitch_value = screen.get(
+        "final_baseline_pitch_mm",
+        screen.get("effective_pitch_mm"),
+    )
+    if pitch_value is None:
+        print("FAIL: manifest has no Wave baseline pitch")
+        return 2
+    pitch = float(pitch_value)
     angles = data["screen"]["screen_angles_deg"]
+    baseline_grid = data.get("wave_baseline_grid") or {}
+    per_channel_grid = baseline_grid.get("per_channel", {})
+    minimum_clearance = float(
+        screen.get("minimum_centerline_clearance_mm", 0.0)
+    )
     rotating_bed = (
         "Xθ/Yθ" in str(data.get("bed_motion", ""))
         or "xtheta/ytheta" in str(data.get("bed_motion", "")).lower()
@@ -329,43 +633,91 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError(
                     f"{path.name} has no shared rotating row-angle header"
                 )
-            result = audit_program(
-                path,
-                float(angles[channel]),
-                pitch,
-                sample_columns=args.sample_columns,
-                rotating_bed=rotating_bed,
-                ratio=theta_ratio(path) if rotating_bed else 1.0,
+            channel_pitch = float(
+                per_channel_grid.get(channel, {}).get(
+                    "pitch_mm",
+                    pitch,
+                )
             )
+            if style == "waves_fixed":
+                channel_grid = per_channel_grid.get(channel, {})
+                result = audit_fixed_baseline_program(
+                    path,
+                    float(angles[channel]),
+                    channel_pitch,
+                    expected_origin_mm=channel_grid.get("origin_mm"),
+                    sample_columns=args.sample_columns,
+                    rotating_bed=rotating_bed,
+                    ratio=(
+                        theta_ratio(path) if rotating_bed else 1.0
+                    ),
+                    minimum_clearance_mm=minimum_clearance,
+                )
+            else:
+                result = audit_program(
+                    path,
+                    float(angles[channel]),
+                    channel_pitch,
+                    sample_columns=args.sample_columns,
+                    rotating_bed=rotating_bed,
+                    ratio=(
+                        theta_ratio(path) if rotating_bed else 1.0
+                    ),
+                )
         except (OSError, ValueError, KeyError) as error:
             print("FAIL: %s" % error)
             return 2
-        passed = float(result["spread_mm"]) <= args.tolerance_mm
-        failed |= not passed
-        print(
-            "%-8s samples=%3d min=%.6f median=%.6f max=%.6f "
-            "spread=%.6f mm %s"
-            % (
-                label,
-                result["samples"],
-                result["minimum_mm"],
-                result["median_mm"],
-                result["maximum_mm"],
-                result["spread_mm"],
-                "PASS" if passed else "FAIL",
-            )
+        passed = (
+            float(result["baseline_residual_mm"]) <= args.tolerance_mm
+            if style == "waves_fixed"
+            else float(result["spread_mm"]) <= args.tolerance_mm
         )
+        failed |= not passed
+        if style == "waves_fixed":
+            print(
+                "%-8s pitch=%.6f rows=%3d residual=%.6f "
+                "wave-range=%.6f..%.6f mm %s"
+                % (
+                    label,
+                    result["pitch_mm"],
+                    result["rows"],
+                    result["baseline_residual_mm"],
+                    result["minimum_wave_range_mm"],
+                    result["maximum_wave_range_mm"],
+                    "PASS" if passed else "FAIL",
+                )
+            )
+        else:
+            print(
+                "%-8s samples=%3d min=%.6f median=%.6f max=%.6f "
+                "spread=%.6f mm %s"
+                % (
+                    label,
+                    result["samples"],
+                    result["minimum_mm"],
+                    result["median_mm"],
+                    result["maximum_mm"],
+                    result["spread_mm"],
+                    "PASS" if passed else "FAIL",
+                )
+            )
 
     if failed:
         print(
-            "FAIL: adjacent-gap spread exceeds %.6f mm"
+            "FAIL: Wave baseline or adjacent-gap spread exceeds %.6f mm"
             % args.tolerance_mm
         )
         return 1
-    print(
-        "PASS: all four inks remain within %.6f mm row-spacing spread"
-        % args.tolerance_mm
-    )
+    if style == "waves_fixed":
+        print(
+            "PASS: all four inks keep fixed uniform baselines; "
+            "row-local visible gaps may vary"
+        )
+    else:
+        print(
+            "PASS: all four inks remain within %.6f mm row-spacing spread"
+            % args.tolerance_mm
+        )
     return 0
 
 

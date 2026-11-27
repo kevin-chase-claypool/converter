@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-013` | implemented | [Add variable-depth Wave with fixed row baselines](2026/2026-11-26-fixed-baseline-variable-depth-wave.md) | `cmyk`, `wave-screen`, `fixed-baselines`, `variable-depth`, `phase`, `frequency`, `clearance`, `row-lock`, `x-theta`, `manifest` |
 | 2026-11-26 | `WSW-20261126-012` | implemented | [Block saves that do not guarantee Wave row pitch](2026/2026-11-26-wave-row-pitch-ui-preflight.md) | `cmyk`, `wave-screen`, `row-spacing`, `row-lock`, `preflight`, `save-guard`, `user-interface`, `pen-offset` |
 | 2026-11-26 | `WSW-20261126-011` | implemented | [Save CMYK defaults for the current image](2026/2026-11-26-save-cmyk-image-defaults.md) | `cmyk`, `image-defaults`, `artwork-layout`, `sidecar`, `recipe`, `restore`, `user-interface` |
 | 2026-11-26 | `WSW-20261126-010` | implemented | [Add a post-save CMYK G-code overlay audit](2026/2026-11-26-post-save-cmyk-overlay-audit.md) | `cmyk`, `gcode`, `overlay`, `post-save`, `bounding-envelope`, `identity`, `audit`, `visualization` |

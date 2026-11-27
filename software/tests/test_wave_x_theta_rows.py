@@ -1,5 +1,6 @@
 """Exact row pitch must survive the rotating-bed Wave planner."""
 
+import importlib.util
 import math
 import re
 import sys
@@ -14,6 +15,17 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "software"))
 
 import converter_core as converter
+
+
+def load_spacing_checker():
+    path = ROOT / "tools" / "check_cmyk_wave_spacing.py"
+    spec = importlib.util.spec_from_file_location(
+        "check_cmyk_wave_spacing",
+        path,
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 WORD = re.compile(r"([XYA])(-?\d+(?:\.\d+)?)", re.IGNORECASE)
@@ -246,6 +258,121 @@ class WaveXThetaRowsTests(unittest.TestCase):
                             "rotating-bed interpolation must not change "
                             "Wave row pitch",
                         )
+
+    def test_fixed_baselines_survive_compensation_and_shared_a_schedule(self):
+        checker = load_spacing_checker()
+        page_mm = 64.0
+        yy, xx = np.mgrid[0:128, 0:128]
+        tone = (0.35 + 0.45 * xx / 127.0).astype("float32")
+        depth = (0.10 + 0.80 * yy / 127.0).astype("float32")
+        defaults = converter.default_settings()
+        profile = converter.load_bed_compensation(
+            defaults.bed_compensation_path
+        )
+        shared = converter.row_locked_bed_compensation_set(
+            profile,
+            tuple(converter.SCREEN_ANGLES_DEG.values()),
+        )
+        for order in ("rows_ascending", "rows_descending"):
+            for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+                with self.subTest(
+                    order=order,
+                    angle_deg=angle_deg,
+                ):
+                    marks = converter.screen_channel(
+                        tone,
+                        {
+                            "off_x": 0.0,
+                            "off_y": 0.0,
+                            "width_mm": page_mm,
+                            "height_mm": page_mm,
+                            "pixels_w": 128,
+                            "pixels_h": 128,
+                        },
+                        style="waves_fixed",
+                        spacing_mm=4.0,
+                        angle_deg=angle_deg,
+                        pen_diameter_mm=0.8,
+                        row_clearance_mm=1.05,
+                        depth_tone=depth,
+                        seed=7,
+                        wave_frequency_variation=(
+                            converter.WAVE_FREQUENCY_VARIATION
+                        ),
+                    )
+                    document = converter.svg_document(
+                        {"y": marks},
+                        page_mm,
+                        page_mm,
+                        0.8,
+                        order=["y"],
+                    )
+                    settings = converter.Settings(
+                        theta_mode="optimized",
+                        theta_center_hold_diameter_mm=0.0,
+                        bed_compensation_path=(
+                            defaults.bed_compensation_path
+                        ),
+                        row_locked_compensation=True,
+                        row_lock_screen_angle_deg=angle_deg,
+                        row_lock_projection=shared.for_screen_angle(
+                            angle_deg
+                        ),
+                        contour_order=order,
+                        frame_center_mm=(
+                            page_mm / 2.0,
+                            page_mm / 2.0,
+                        ),
+                        flip_y=True,
+                        tolerance=0.05,
+                        pen_diameter_mm=0.8,
+                    )
+                    with tempfile.TemporaryDirectory() as folder:
+                        source = Path(folder) / "fixed.svg"
+                        source.write_text(document, encoding="utf-8")
+                        contours = converter.read_svg(
+                            str(source),
+                            settings,
+                        )
+                        plan = converter.plan_program(
+                            contours,
+                            settings,
+                        )
+                        grid = plan["wave_baseline_grid"]
+                        self.assertEqual(grid["mode"], "fixed_baselines")
+                        self.assertLessEqual(
+                            grid["maximum_residual_mm"],
+                            0.005,
+                        )
+                        self.assertIsNotNone(plan["wave_row_schedule"])
+                        gcode = converter.contours_to_gcode(
+                            contours,
+                            settings,
+                            plan,
+                        )
+                        output = Path(folder) / "fixed.gcode"
+                        output.write_text(gcode, encoding="utf-8")
+                        result = checker.audit_fixed_baseline_program(
+                            output,
+                            angle_deg,
+                            grid["pitch_mm"],
+                            sample_columns=31,
+                            rotating_bed=True,
+                            ratio=settings.theta_drive_ratio,
+                            minimum_clearance_mm=1.05,
+                        )
+                    self.assertLessEqual(
+                        result["baseline_residual_mm"],
+                        0.005,
+                    )
+                    self.assertGreater(
+                        result["maximum_wave_range_mm"],
+                        result["minimum_wave_range_mm"] * 1.5,
+                        "row-local depth must remain visible after rotation",
+                    )
+                    self.assertIn("Wave fixed baselines", gcode)
+                    self.assertIn("row-locked projection", gcode)
+                    self.assertIn("shared Wave row angles", gcode)
 
 
 if __name__ == "__main__":

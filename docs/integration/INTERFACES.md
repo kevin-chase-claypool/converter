@@ -84,13 +84,17 @@ work coordinates before emission. It retains the measured `165.100 mm` field
 from profile `18bfb4ed1c33` and extends its local-affine correction by
 `14.900 mm` to the `180.000 mm` gantry-reach radius. The Machine-tab path
 remains editable, and an empty path selects the uncompensated path. The CMYK
-**Wave screen - equidistant rows** style keeps this profile by default through
-its spacing guard, but evaluates it as a **row-locked projection**. For each
+Both production Wave styles (**Wave screen - equidistant rows** and
+**Variable-depth Wave - fixed baselines**) keep this profile by default through
+their spacing guard, but evaluate it as a **row-locked projection**. For each
 screen-frame along-row coordinate, the complete measured field is averaged
 across the perpendicular coordinate; that one displacement is applied to
-every parallel row. The raw row-normal variation is incompatible with exact
-row pitch and is not applied. Unchecking the guard applies the raw field and
-accepts non-uniform rows. Other screen styles continue to inherit the raw
+every parallel row. The raw row-normal variation is incompatible with a fixed
+row lattice and is not applied. Equidistant rows also require constant
+instantaneous spacing. Fixed-baseline variable depth preserves only the equal
+baseline pitch, so visible row gaps may vary while rows remain ordered and
+clear of the pen envelope. Unchecking the guard applies the raw field and
+accepts non-uniform baselines. Other screen styles continue to inherit the raw
 selected profile:
 
 ```text
@@ -116,12 +120,23 @@ Compensated G-code uses the transformed and subdivided points;
 row-locked Wave G-code additionally identifies the full profile fingerprint,
 projection maximum, and per-ink row angle in its header. Its set manifest
 records `row_locked_projection` rather than claiming the raw field was applied.
+Fixed-baseline G-code also records the final fitted baseline pitch, origin,
+row count, effective screen angle, and a per-contour row/baseline annotation.
+Manifest version 5 records the pre-fit tab pitch separately from the measured
+final pitch and per-ink baseline grids. This makes the scale evidence survive
+global bed fit and the final `X/Y/A` transform instead of advertising the
+pre-fit recipe value.
 Every current G-code file also records its G54 frame center, compensation
 fingerprint, compensation reserve, pen-radius reserve, and planning radius.
 CMYK planning rejects the complete set if any of those identities differ
 between inks, or if a Wave row-locked channel does not match its configured
 screen angle. The set manifest stores the parsed identity per ink with the
 file hashes.
+`tools/check_cmyk_wave_spacing.py` accepts both production styles. For
+equidistant rows it measures final adjacent-gap spread. For fixed baselines it
+reads the emitted row metadata, verifies the final uniform baseline grid,
+checks that the row waveforms remain clear, and treats varying instantaneous
+gaps as the intended depth representation rather than a failure.
 Interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with

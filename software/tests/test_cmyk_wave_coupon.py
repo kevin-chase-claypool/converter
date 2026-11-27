@@ -175,6 +175,40 @@ class CmykWaveCouponTests(unittest.TestCase):
         self.assertEqual(checks["over_tolerance"], 0)
         self.assertIn("fixed", checks["strategies"])
 
+    def test_fixed_baseline_coupon_compares_xy_only_and_rotating_bed(self):
+        gcode, settings, marks = (
+            self.module.build_fixed_baseline_coupon()
+        )
+        self.assertIn(
+            "Variable-depth Wave - fixed baselines",
+            gcode,
+        )
+        self.assertIn("upper two patches: XY only", gcode)
+        self.assertIn("lower two: Xtheta-Ytheta", gcode)
+        self.assertIn(
+            "3.360 mm and 4.200 mm",
+            gcode,
+        )
+        self.assertIn("row-lock bed compensation", gcode)
+        self.assertEqual(settings.theta_mode, "optimized")
+        self.assertEqual(gcode.count("\nM2\n"), 1)
+        self.assertNotRegex(gcode, r"(?m)^M0\s*$")
+        self.assertGreaterEqual(len(marks), 24)
+
+        with tempfile.TemporaryDirectory(
+            prefix="cmyk-fixed-baseline-coupon-"
+        ) as folder:
+            path = Path(folder) / "fixed-baseline-coupon.gcode"
+            path.write_text(gcode, encoding="utf-8")
+            checks = self.module.converter.analyse_file(path, settings)
+        self.assertEqual(checks["rapids_with_rotation"], 0)
+        self.assertLessEqual(checks["step"], checks["cap"])
+        self.assertLessEqual(checks["rate"], checks["rate_cap"] * 1.01)
+        self.assertEqual(checks["over_tolerance"], 0)
+        self.assertIn("fixed", checks["strategies"])
+        self.assertIn("x_theta", checks["strategies"])
+        self.assertIn("y_theta", checks["strategies"])
+
     @staticmethod
     def _amplitude_spread(marks, angle_deg):
         angle = math.radians(angle_deg)

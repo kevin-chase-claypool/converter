@@ -13,7 +13,11 @@ from .kinematics import (
     plan_travel_move,
     polar_segment_steps,
 )
-from .wave_rows import wave_row_theta_schedule, wave_row_thetas
+from .wave_rows import (
+    wave_row_screen_axes,
+    wave_row_theta_schedule,
+    wave_row_thetas,
+)
 from .bed_compensation import (
     compensated_machine_point,
     compensation_step_count,
@@ -245,6 +249,155 @@ def _wave_row_step_count(start_theta, end_theta, program_plan):
     return max(1, int(math.ceil(abs(end_theta - start_theta) / max_step)))
 
 
+def _wave_baseline_grid(planned_jobs, settings):
+    """Return the final paper-space row-baseline contract, when available."""
+    along_axis, across_axis = wave_row_screen_axes(settings)
+    row_samples = {}
+    policies = set()
+    clearance_scales = []
+    for _planned, points, _thetas, _strategies in planned_jobs:
+        row_index = getattr(points, "wave_row_index", None)
+        baseline = getattr(points, "wave_baseline_mm", None)
+        if row_index is None or baseline is None:
+            continue
+        policy = getattr(points, "wave_row_policy", None)
+        if policy:
+            policies.add(str(policy))
+        row_samples.setdefault(int(row_index), []).append(
+            baseline[0] * across_axis[0] + baseline[1] * across_axis[1]
+        )
+        scale = getattr(points, "wave_clearance_scale", None)
+        if scale is not None:
+            clearance_scales.append(float(scale))
+    if len(row_samples) < 2:
+        return None
+    if any(
+        max(values) - min(values) > 0.005
+        for values in row_samples.values()
+    ):
+        # Coupon tools can combine several independently screened patches with
+        # restarted row indices. That is not one coherent final row grid.
+        return None
+
+    rows = []
+    for row_index in sorted(row_samples):
+        values = sorted(row_samples[row_index])
+        rows.append((row_index, values[len(values) // 2]))
+    first_index, first_across = rows[0]
+    last_index, last_across = rows[-1]
+    if last_index <= first_index:
+        return None
+    pitch_mm = (last_across - first_across) / (last_index - first_index)
+    if abs(pitch_mm) <= 1e-9:
+        return None
+    origin_mm = first_across - first_index * pitch_mm
+    maximum_residual = max(
+        abs(across - (origin_mm + row_index * pitch_mm))
+        for row_index, across in rows
+    )
+    if maximum_residual > 0.005:
+        if "fixed_baselines" not in policies:
+            return None
+        raise ValueError(
+            "Wave row baselines are not uniformly spaced in final paper "
+            "coordinates"
+        )
+    mode = (
+        "fixed_baselines"
+        if "fixed_baselines" in policies
+        else "constant_baselines"
+    )
+    return {
+        "mode": mode,
+        "pitch_mm": abs(pitch_mm),
+        "signed_pitch_mm": pitch_mm,
+        "origin_mm": origin_mm,
+        "rows": len(rows),
+        "first_row": rows[0][0],
+        "last_row": rows[-1][0],
+        "maximum_residual_mm": maximum_residual,
+        "screen_angle_deg": math.degrees(
+            math.atan2(along_axis[1], along_axis[0])
+        ),
+        "minimum_clearance_scale": (
+            min(clearance_scales) if clearance_scales else None
+        ),
+    }
+
+
+def _verify_final_wave_clearance(contours, settings):
+    """Reject a final scaled Wave layer that violates the physical pen gap."""
+    from .cmyk import (  # avoid a module import cycle at load time
+        WAVE_MIN_EDGE_GAP_MM,
+        _polyline_pair_is_clear,
+        _polyline_segments,
+    )
+
+    groups = {}
+    _along_axis, across_axis = wave_row_screen_axes(settings)
+    for contour in contours:
+        row_index = getattr(contour, "wave_row_index", None)
+        baseline = getattr(contour, "wave_baseline_mm", None)
+        if (
+            row_index is None
+            or baseline is None
+            or getattr(contour, "wave_row_policy", None)
+            != "fixed_baselines"
+            or len(contour) < 2
+        ):
+            continue
+        groups.setdefault(int(row_index), []).append((baseline, contour))
+    if len(groups) < 2:
+        return
+    baselines = {}
+    for row_index, entries in groups.items():
+        across = [
+            entry[0][0] * across_axis[0]
+            + entry[0][1] * across_axis[1]
+            for entry in entries
+        ]
+        if max(across) - min(across) > 0.005:
+            # Multiple independently positioned coupon patches can reuse row
+            # indices; each patch was already checked before they were combined.
+            return
+        ordered = sorted(across)
+        baselines[row_index] = ordered[len(ordered) // 2]
+    minimum_clearance = (
+        max(0.0, float(getattr(settings, "pen_diameter_mm", 0.0)))
+        + WAVE_MIN_EDGE_GAP_MM
+    )
+    for first_index, second_index in zip(
+        sorted(groups),
+        sorted(groups)[1:],
+    ):
+        if second_index != first_index + 1:
+            continue
+        for first_baseline, first in groups[first_index]:
+            for second_baseline, second in groups[second_index]:
+                first_across = (
+                    first_baseline[0] * across_axis[0]
+                    + first_baseline[1] * across_axis[1]
+                )
+                second_across = (
+                    second_baseline[0] * across_axis[0]
+                    + second_baseline[1] * across_axis[1]
+                )
+                if abs(first_across - baselines[first_index]) > 0.005:
+                    continue
+                if abs(second_across - baselines[second_index]) > 0.005:
+                    continue
+                if not _polyline_pair_is_clear(
+                    _polyline_segments(first),
+                    _polyline_segments(second),
+                    minimum_clearance,
+                ):
+                    raise ValueError(
+                        "Wave rows violate the final pen plus edge-gap "
+                        "clearance after artwork scaling; increase the "
+                        "effective pitch or reduce the pen width"
+                    )
+
+
 def planning_envelope(settings):
     """Return the compensation- and pen-aware G54 planning envelope."""
     bed_compensation = load_bed_compensation(
@@ -342,9 +495,14 @@ def plan_program(contours, settings, cancel_check=None):
                 )
                 for point in contour
             ],
+            point_transform=lambda point: (
+                point[0] - source_center[0] + placement_x,
+                point[1] - source_center[1] + placement_y,
+            ),
         )
         for contour in clipped_contours
     ]
+    _verify_final_wave_clearance(clipped_contours, settings)
     contour_join = None
     if bool(getattr(settings, "join_touching_contours", False)):
         clipped_contours, contour_join = join_touching_contours(
@@ -464,6 +622,10 @@ def plan_program(contours, settings, cancel_check=None):
         "pen_radius_safety_margin_mm": pen_radius_margin,
         "machine_reach_radius_mm": reach,
         "wave_row_schedule": wave_row_schedule,
+        "wave_baseline_grid": _wave_baseline_grid(
+            planned_jobs,
+            settings,
+        ),
         "contour_join": contour_join,
     }
 
@@ -482,6 +644,7 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     motion_label = bed_motion_label(settings)
     if program_plan.get("wave_row_schedule"):
         motion_label += ", shared Wave row angles"
+    wave_baseline_grid = program_plan.get("wave_baseline_grid")
     # Establish the drawing file's own units, distance, feed, plane, and work
     # coordinate modes. ioSender streams these lines; it does not repair modal
     # state inherited from an earlier console command or macro.
@@ -583,6 +746,24 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 planning_radius,
             ),
         )
+    if (
+        wave_baseline_grid
+        and wave_baseline_grid.get("mode") == "fixed_baselines"
+    ):
+        lines.insert(
+            5,
+            (
+                "(Wave fixed baselines: pitch %.4f mm, origin %.4f mm, "
+                "rows %d, screen angle %.3f deg, row-local depth, "
+                "visible gaps vary by design)"
+            )
+            % (
+                wave_baseline_grid["pitch_mm"],
+                wave_baseline_grid["origin_mm"],
+                wave_baseline_grid["rows"],
+                wave_baseline_grid["screen_angle_deg"],
+            ),
+        )
     contour_join = program_plan.get("contour_join")
     if contour_join and contour_join.get("enabled"):
         lines.insert(
@@ -613,6 +794,23 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         x0, y0 = machine_point(pts[0], first_theta)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
+        wave_row_index = getattr(pts, "wave_row_index", None)
+        wave_baseline = getattr(pts, "wave_baseline_mm", None)
+        if (
+            wave_row_index is not None
+            and wave_baseline is not None
+            and wave_baseline_grid
+            and wave_baseline_grid.get("mode") == "fixed_baselines"
+        ):
+            _along_axis, across_axis = wave_row_screen_axes(settings)
+            baseline_across = (
+                wave_baseline[0] * across_axis[0]
+                + wave_baseline[1] * across_axis[1]
+            )
+            lines.append(
+                "(wave row %d baseline %.4f mm)"
+                % (int(wave_row_index), baseline_across)
+            )
         bridge = None
         if (
             previous_machine is not None

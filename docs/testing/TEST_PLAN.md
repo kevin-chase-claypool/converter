@@ -568,6 +568,40 @@ Acceptance:
 Procedure, measured geometry, and limitations:
 [`2026-10-26-m-13-phase-locked-wave-depth.md`](../report/lab-notes/2026-10-26-m-13-phase-locked-wave-depth.md).
 
+### M-13 fixed-baseline variable-depth paper check
+
+Generate the XY-only versus rotating-bed comparison:
+
+```powershell
+python tools\make_cmyk_wave_coupon.py --fixed-baseline
+```
+
+Run
+[`cmyk-variable-depth-wave-coupon.gcode`](../../samples/gcode/cmyk-variable-depth-wave-coupon.gcode)
+once on ordinary paper with one black `0.8 mm` Pigma Micron. Use one
+`G65 P113` registration, keep the sheet fixed, set 100 % feed override, and
+record the active `$113`, `$123`, and `$701` values. The upper row is the
+XY-only control. The lower row repeats the same 0-degree, `3.36 mm` and
+`4.20 mm` fixed-baseline geometry under Xθ/Yθ.
+
+Before printing, require
+`python tools\check_cmyk_wave_spacing.py <generated-set.json>` to pass for a
+normal four-ink set. The coupon itself is a visual discriminator and does not
+have a four-ink set manifest.
+
+Acceptance:
+
+- Every patch has one straight, equally spaced row baseline per row index.
+- Visible gaps vary by design and correlate with image depth; they are not
+  evaluated as a demand for constant instantaneous pitch.
+- Row-local amplitude and winding rate visibly differ across the patch.
+- No adjacent rows touch or cross, including under Xθ/Yθ interpolation.
+- The rotating-bed half produces the same row-baseline pitch and no additional
+  contact defect relative to the XY-only half.
+
+This is a new physical gate. Passing software geometry does not yet establish
+ink-edge clearance or machine following quality.
+
 Use [`m06-xy-theta-lettering.svg`](../../samples/svg/m06-xy-theta-lettering.svg)
 as a separate pen-free visual strategy check. With the current default r-theta
 resolver, its generated command list must contain both `(x_theta)` and

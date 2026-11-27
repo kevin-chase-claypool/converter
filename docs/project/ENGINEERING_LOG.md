@@ -1,5 +1,45 @@
 # Engineering Log
 
+<a id="elog-20261126-fixed-baseline-variable-depth-wave"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Add variable-depth Wave with fixed row baselines
+
+- Added the separate production style **Variable-depth Wave - fixed
+  baselines** (`waves_fixed`). Every row keeps `baseline_i = y0 + i * pitch`;
+  smoothed scene depth drives row-specific amplitude, phase, and winding rate,
+  so visible instantaneous gaps vary by design.
+- Equal rows remain safe through a half-pitch amplitude bound plus exact
+  finite-segment pen-envelope checks. A failed pair is damped locally rather
+  than reducing the complete image. Zero depth collapses every row onto its
+  straight baseline.
+- The style retains row-lock bed compensation and the explicit-row shared
+  rotating-bed A schedule. Final scaled geometry is checked again before
+  planning, and the fixed-baseline self-screened path avoids imported-outline
+  pen-width shrink that could narrow the configured physical clearance.
+- Wave rows now carry their baseline point and policy through SVG output,
+  Y flip, artwork scaling, pen offsets, clipping, path reversal, planning,
+  overdraw, and G-code emission. Fixed-baseline G-code records the final fitted
+  pitch, origin, row count, screen angle, and per-contour row metadata.
+- Set manifest version 5 separates the pre-fit tab pitch from the final
+  measured baseline pitch. The regression reproducing the known `1.21 mm`
+  recipe records the actual `2.129 mm` final pitch and `1.7595x` fit scale.
+- `check_cmyk_wave_spacing.py` now validates fixed uniform baselines, varied
+  row envelopes, final pen clearance, row-lock identity, and any shared A
+  schedule while continuing to enforce exact instantaneous gaps for
+  `waves_even`.
+- Added the four-patch `cmyk-variable-depth-wave-coupon.gcode` comparison:
+  XY-only and Xθ/Yθ at `3.36/4.20 mm` on a 0-degree screen. Physical
+  inspection after one HOME + REGISTER remains the acceptance gate.
+- The coupon strict motion check passes with `2,989` drawing moves, a
+  `1.74 deg` maximum drawing-bed step, `500 motor deg/s` peak A rate, no
+  rotated pen-up `G0`, and `0.017 mm` worst bounded bed path bow.
+- Complete converter discovery passes `662` tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261126-013`;
+  `docs/changes/windows-software/2026/2026-11-26-fixed-baseline-variable-depth-wave.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, fixed-baselines,
+  variable-depth, row-lock, x-theta, manifest, final-machine-coordinates,
+  physical-validation-pending.
+
 <a id="elog-20261126-wave-row-pitch-ui-preflight"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Block saves that do not guarantee Wave row pitch
 

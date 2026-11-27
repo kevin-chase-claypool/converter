@@ -39,6 +39,9 @@ DEFAULT_PITCH_OUTPUT = (
 DEFAULT_LETTER_OUTPUT = (
     ROOT / "samples" / "gcode" / "cmyk-wave-letter-test.gcode"
 )
+DEFAULT_FIXED_BASELINE_OUTPUT = (
+    ROOT / "samples" / "gcode" / "cmyk-variable-depth-wave-coupon.gcode"
+)
 DEFAULT_BED = Path(converter.DEFAULT_BED_COMPENSATION_PATH)
 PAPER_PITCH_MM = 3.36
 PEN_WIDTH_MM = 0.8
@@ -72,6 +75,9 @@ LETTER_ROWS = (
     ("waves_zero", 4.20),
     ("waves_even", 3.36),
 )
+FIXED_BASELINE_PATCH_LEFT_MM = (-57.0, 3.0)
+FIXED_BASELINE_PATCH_TOP_MM = (-42.0, 8.0)
+FIXED_BASELINE_PITCHES_MM = (3.36, 4.20)
 
 
 def coupon_settings(theta_mode="fixed"):
@@ -242,6 +248,102 @@ def build_letter_test():
     return banner + gcode, settings, marks
 
 
+def build_fixed_baseline_coupon():
+    """Build the parked-versus-rotating fixed-baseline physical coupon."""
+    profile = converter.load_bed_compensation(DEFAULT_BED)
+    projection = converter.row_locked_bed_compensation(profile, 0.0)
+    patch_plans = []
+    marks = []
+    for theta_mode, top_mm in zip(
+        ("fixed", "optimized"),
+        FIXED_BASELINE_PATCH_TOP_MM,
+    ):
+        for left_mm, pitch_mm in zip(
+            FIXED_BASELINE_PATCH_LEFT_MM,
+            FIXED_BASELINE_PITCHES_MM,
+        ):
+            patch_marks = coupon_patch(
+                "waves_fixed",
+                left_mm,
+                top_mm,
+                angle_deg=0.0,
+                spacing_mm=pitch_mm,
+            )
+            settings = dataclasses.replace(
+                coupon_settings(theta_mode),
+                compensate_pen_width=False,
+                theta_center_hold_diameter_mm=0.0,
+                row_locked_compensation=True,
+                row_lock_screen_angle_deg=0.0,
+                row_lock_projection=projection,
+                contour_order="rows_ascending",
+            )
+            patch_plans.append(
+                converter.plan_program(patch_marks, settings)
+            )
+            marks.extend(patch_marks)
+
+    jobs = []
+    contours = []
+    offset = 0
+    for plan in patch_plans:
+        jobs.extend(_reindexed_jobs(plan, offset))
+        contours.extend(plan["contours"])
+        offset += len(plan["planned_jobs"])
+
+    settings = coupon_settings("optimized")
+    settings = dataclasses.replace(
+        settings,
+        compensate_pen_width=False,
+        row_locked_compensation=True,
+        row_lock_screen_angle_deg=0.0,
+        row_lock_projection=projection,
+        contour_order="rows_ascending",
+    )
+    combined_plan = {
+        "center": (0.0, 0.0),
+        "source_center": (0.0, 0.0),
+        "contours": contours,
+        "planned_jobs": jobs,
+        "bed_compensation": patch_plans[-1]["bed_compensation"],
+        "planning_radius_mm": patch_plans[-1]["planning_radius_mm"],
+        "compensation_safety_margin_mm": patch_plans[-1][
+            "compensation_safety_margin_mm"
+        ],
+        "pen_radius_safety_margin_mm": patch_plans[-1][
+            "pen_radius_safety_margin_mm"
+        ],
+        "machine_reach_radius_mm": patch_plans[-1][
+            "machine_reach_radius_mm"
+        ],
+        "wave_row_schedule": patch_plans[-1]["wave_row_schedule"],
+        "wave_baseline_grid": None,
+        "contour_join": None,
+    }
+    gcode = converter.contours_to_gcode(
+        marks,
+        settings,
+        program_plan=combined_plan,
+    )
+    gcode = re.sub(
+        r"\(frame center .* bed motion .*\)",
+        "(frame center 0.000,0.000 mm, bed motion: upper XY only + "
+        "lower Xtheta/Ytheta, shared Wave row angles)",
+        gcode,
+        count=1,
+    )
+    banner = (
+        "(CMYK variable-depth Wave physical coupon - 4 patches)\n"
+        "(mode: Variable-depth Wave - fixed baselines, 0 degree screen)\n"
+        "(upper two patches: XY only; lower two: Xtheta-Ytheta)\n"
+        "(left-to-right pitches: 3.360 mm and 4.200 mm)\n"
+        "(0.800 mm black pen, F700, row-lock bed compensation)\n"
+        "(inspect every row base: equal pitch, wavy gaps vary by design, "
+        "no touching)\n"
+    )
+    return banner + gcode, settings, marks
+
+
 def _reindexed_jobs(plan, offset):
     jobs = []
     for planned, points, thetas, strategies in plan["planned_jobs"]:
@@ -309,9 +411,17 @@ def main():
         action="store_true",
         help="generate the 16-patch 8.5 x 11 phase-locked wave test",
     )
+    mode.add_argument(
+        "--fixed-baseline",
+        action="store_true",
+        help="generate the XY-only/Xtheta-Ytheta fixed-baseline coupon",
+    )
     args = parser.parse_args()
 
-    if args.letter:
+    if args.fixed_baseline:
+        gcode, settings, marks = build_fixed_baseline_coupon()
+        output_path = Path(args.out or DEFAULT_FIXED_BASELINE_OUTPUT)
+    elif args.letter:
         gcode, settings, marks = build_letter_test()
         output_path = Path(args.out or DEFAULT_LETTER_OUTPUT)
     elif args.multi_pitch:

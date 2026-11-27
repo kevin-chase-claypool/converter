@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-013` | implemented | [Add variable-depth Wave with fixed row baselines](../windows-software/2026/2026-11-26-fixed-baseline-variable-depth-wave.md) | `cmyk`, `wave-screen`, `fixed-baselines`, `variable-depth`, `phase`, `frequency`, `clearance`, `row-lock`, `x-theta`, `manifest` |
 | 2026-11-26 | `WSW-20261126-009` | implemented | [Harden CMYK reach and set identity](../windows-software/2026/2026-11-26-harden-cmyk-reach-and-set-identity.md) | `cmyk`, `bed-compensation`, `machine-reach`, `pen-envelope`, `preflight`, `set-identity`, `g54`, `row-lock`, `safety` |
 | 2026-11-26 | `RPSW-20261126-001` | verified | [Restore direct Ethernet access after host-address loss](../rp23cnc-software/2026/2026-11-26-direct-ethernet-host-address-recovery.md) | `grblhal`, `ethernet`, `w5500`, `iosender`, `network`, `static-ip`, `recovery`, `app-config` |
 | 2026-11-26 | `HW-20261126-001` | implemented | [Separate bed, stock, and tape-margin geometry](2026/2026-11-26-separate-bed-stock-tape-geometry.md) | `rotating-bed`, `paper-stock`, `tape-margin`, `printable-area`, `bed-compensation`, `gantry-reach`, `physical-validation-pending` |

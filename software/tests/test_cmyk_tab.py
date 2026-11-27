@@ -1752,6 +1752,207 @@ class ScreeningTests(unittest.TestCase):
                     )
                     self.assertEqual(actual, expected)
 
+    def test_fixed_baseline_wave_rows_collapse_to_straight_equal_rows(self):
+        spacing = 4.0
+        size = 128
+        tone = self.np.ones((size, size), dtype="float32")
+        depth = self.np.zeros((size, size), dtype="float32")
+        rows = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": size,
+                "pixels_h": size,
+            },
+            style="waves_fixed",
+            spacing_mm=spacing,
+            pen_diameter_mm=0.8,
+            depth_tone=depth,
+            seed=11,
+            wave_frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+        )
+        ordered = sorted(rows, key=lambda row: row.wave_row_index)
+        self.assertGreaterEqual(len(ordered), 12)
+        baselines = []
+        for row in ordered:
+            baseline = row.wave_baseline_mm[1]
+            baselines.append(baseline)
+            self.assertLess(
+                max(abs(y_value - baseline) for _x, y_value in row),
+                1e-9,
+                "zero depth must flatten the row onto its fixed baseline",
+            )
+        gaps = [
+            second - first
+            for first, second in zip(baselines, baselines[1:])
+        ]
+        self.assertTrue(
+            all(abs(gap - spacing) < 1e-9 for gap in gaps)
+        )
+
+    def test_fixed_baseline_wave_depth_drives_row_amplitude_and_frequency(self):
+        spacing = 4.0
+        size = 128
+        tone = self.np.ones((size, size), dtype="float32")
+        yy, _xx = self.np.mgrid[0:size, 0:size]
+        depth = (0.10 + 0.80 * yy / (size - 1)).astype("float32")
+        rows = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": size,
+                "pixels_h": size,
+            },
+            style="waves_fixed",
+            spacing_mm=spacing,
+            pen_diameter_mm=0.8,
+            depth_tone=depth,
+            seed=7,
+            wave_frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+        )
+        ordered = sorted(rows, key=lambda row: row.wave_row_index)
+
+        def amplitude(row):
+            return max(y for _x, y in row) - min(y for _x, y in row)
+
+        def crossings(row):
+            baseline = row.wave_baseline_mm[1]
+            signs = [
+                1 if y_value >= baseline else -1
+                for _x, y_value in row
+            ]
+            return sum(
+                first != second
+                for first, second in zip(signs, signs[1:])
+            )
+
+        light_rows = ordered[: max(1, len(ordered) // 4)]
+        dark_rows = ordered[-max(1, len(ordered) // 4):]
+        light_amplitude = sum(map(amplitude, light_rows)) / len(light_rows)
+        dark_amplitude = sum(map(amplitude, dark_rows)) / len(dark_rows)
+        self.assertGreater(
+            dark_amplitude,
+            light_amplitude * 2.0,
+            "scene depth must create visibly different row amplitudes",
+        )
+        self.assertGreater(
+            max(map(crossings, dark_rows)),
+            min(map(crossings, light_rows)),
+            "local depth must also vary the row winding rate",
+        )
+
+    def test_fixed_baseline_wave_clearance_scales_at_all_angles_and_pitches(
+        self,
+    ):
+        import converter_core.cmyk as cmyk_core
+
+        page_mm = 64.0
+        pixels_per_mm = 4
+        pixel_count = int(page_mm * pixels_per_mm)
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        yy_mm = yy / pixels_per_mm
+        xx_mm = xx / pixels_per_mm
+        tone = self.np.ones(
+            (pixel_count, pixel_count),
+            dtype="float32",
+        )
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": page_mm,
+            "height_mm": page_mm,
+            "pixels_w": pixel_count,
+            "pixels_h": pixel_count,
+        }
+        minimum_clearance = 0.8 + converter.WAVE_MIN_EDGE_GAP_MM
+        for spacing in (2.80, 3.36, 4.20):
+            for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+                with self.subTest(
+                    spacing=spacing,
+                    angle_deg=angle_deg,
+                ):
+                    radians = math.radians(angle_deg)
+                    local_normal = (
+                        xx_mm * math.sin(radians)
+                        + yy_mm * math.cos(radians)
+                    )
+                    depth = (
+                        0.08
+                        + 0.84
+                        * (
+                            0.5
+                            + 0.5
+                            * self.np.sin(
+                                2.0
+                                * self.np.pi
+                                * local_normal
+                                / (3.0 * spacing)
+                            )
+                        )
+                    ).astype("float32")
+                    rows = converter.screen_channel(
+                        tone,
+                        geometry,
+                        style="waves_fixed",
+                        spacing_mm=spacing,
+                        angle_deg=angle_deg,
+                        pen_diameter_mm=0.8,
+                        depth_tone=depth,
+                        seed=5,
+                        wave_frequency_variation=(
+                            converter.WAVE_FREQUENCY_VARIATION
+                        ),
+                    )
+                    local_rows = [
+                        [
+                            (
+                                x * math.cos(radians)
+                                + y * math.sin(radians),
+                                -x * math.sin(radians)
+                                + y * math.cos(radians),
+                            )
+                            for x, y in row
+                        ]
+                        for row in rows
+                    ]
+                    local_rows.sort(
+                        key=lambda row: sum(y for _x, y in row)
+                        / len(row)
+                    )
+                    for first, second in zip(
+                        local_rows,
+                        local_rows[1:],
+                    ):
+                        self.assertTrue(
+                            cmyk_core._polyline_pair_is_clear(
+                                cmyk_core._polyline_segments(first),
+                                cmyk_core._polyline_segments(second),
+                                minimum_clearance,
+                            )
+                        )
+
+    def test_fixed_baseline_wave_rejects_a_pitch_inside_the_pen_envelope(
+        self,
+    ):
+        tone = self.np.ones((64, 64), dtype="float32")
+        with self.assertRaisesRegex(
+            ValueError,
+            "effective pitch is smaller than the pen width plus edge gap",
+        ):
+            converter.screen_channel(
+                tone,
+                self.geometry(),
+                style="waves_fixed",
+                spacing_mm=0.8,
+                pen_diameter_mm=0.8,
+            )
+
     def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
         spacing = 4.0
         tone = self.np.ones((64, 64), dtype="float32")
@@ -2005,6 +2206,7 @@ class CmykTabTests(unittest.TestCase):
             "rectilinear",
             "crosshatch",
             "waves_even",
+            "waves_fixed",
             "waves_zero",
             "gyroid",
             "tsp",
@@ -2018,6 +2220,9 @@ class CmykTabTests(unittest.TestCase):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker
 
         host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
         tab = self.make_tab(host)
         tab._ensure_layers()
         results = {}
@@ -2219,21 +2424,27 @@ class CmykTabTests(unittest.TestCase):
         tab = self.make_tab()
         self.assertEqual(tab.style.findData("waves"), -1)
         exact = tab.style.findData("waves_even")
+        fixed = tab.style.findData("waves_fixed")
         legacy = tab.style.findData("waves_zero")
         self.assertGreaterEqual(exact, 0)
+        self.assertGreaterEqual(fixed, 0)
         self.assertGreaterEqual(legacy, 0)
         self.assertEqual(
             tab.style.itemText(exact),
             "Wave screen - equidistant rows",
         )
         self.assertEqual(
+            tab.style.itemText(fixed),
+            "Variable-depth Wave - fixed baselines",
+        )
+        self.assertEqual(
             tab.style.itemText(legacy),
             "Wave screen - legacy phase-locked depth (diagnostic)",
         )
         tooltip = tab.style.toolTip().lower()
-        self.assertIn("exactly one pitch apart", tooltip)
+        self.assertIn("equally spaced", tooltip)
+        self.assertIn("visible gaps vary by design", tooltip)
         self.assertIn("legacy diagnostic", tooltip)
-        self.assertIn("selected bed-compensation profile", tooltip)
 
     def test_legacy_wave_diagnostic_keeps_selected_dense_v3_mesh(self):
         host = FakeHost(self.colour_path)
@@ -2290,7 +2501,7 @@ class CmykTabTests(unittest.TestCase):
 
         status = tab.row_pitch_status
         self.assertEqual(status.property("feedback_state"), "blocked")
-        self.assertIn("NOT EQUIDISTANT", status.text())
+        self.assertIn("WAVE BASELINE INVALID", status.text())
         self.assertIn("spacing guard", status.text().lower())
         self.assertFalse(tab.allow_nonuniform_wave_output.isHidden())
         self.assertFalse(tab.allow_nonuniform_wave_output.isChecked())
@@ -2364,6 +2575,220 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertIn("SPACING GUARD", tab.row_pitch_status.text().upper())
 
+    def test_fixed_baseline_wave_is_a_valid_production_wave_mode(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+
+        self.assertIn("fixed row baselines", tab.preserve_wave_pitch.text())
+        self.assertTrue(tab.preserve_wave_pitch.isEnabled())
+        self.assertTrue(tab._wave_spacing_guard_active())
+        self.assertTrue(tab._wave_row_order_active())
+        self.assertFalse(
+            tab._effective_settings().compensate_pen_width,
+            "the self-screened fixed-baseline grid must not be shrunk by "
+            "the imported-outline pen compensation",
+        )
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "pass",
+        )
+        self.assertIn(
+            "visible wavy gaps vary by design",
+            tab.row_pitch_status.text().lower(),
+        )
+        self.assertTrue(tab.allow_nonuniform_wave_output.isHidden())
+
+        tab.preserve_wave_pitch.setChecked(False)
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "blocked",
+        )
+        self.assertIn("row baselines", tab.row_pitch_status.text().lower())
+
+        tab.preserve_wave_pitch.setChecked(True)
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("optimized")
+        )
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "blocked",
+        )
+        self.assertIn("ROW ORDER", tab.row_pitch_status.text().upper())
+
+    def test_fixed_baseline_preflight_requires_its_machine_header(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        checks = self.clean_checks()
+        results = {
+            channel: {
+                "gcode": (
+                    f"; {channel}\n"
+                    "(bed compensation f85ec410dbac, row-locked projection)\n"
+                    "(frame center 30.000,30.000 mm, bed motion "
+                    "x_theta/y_theta, shared Wave row angles)\n"
+                    "M5\nM3\nG1 X0 Y0\nG1 X1 Y1\nM5\n"
+                ),
+                "lines": 9,
+                "checks": dict(checks),
+            }
+            for channel in converter.CHANNELS
+        }
+
+        tab._write_files(results)
+        self.assertEqual(host.saved_labels, [])
+        self.assertIn("fixed-baseline", tab.status.text().lower())
+
+        for record in results.values():
+            record["gcode"] = record["gcode"].replace(
+                "(frame center",
+                "(Wave fixed baselines: pitch 4.0000 mm, origin 0.0000 mm, "
+                "rows 10, screen angle 0.000 deg, row-local depth, "
+                "visible gaps vary by design)\n(frame center",
+            )
+        tab._write_files(results)
+        self.assertEqual(
+            sorted(host.saved_labels),
+            ["black", "cyan", "magenta", "yellow"],
+        )
+
+    def test_fixed_baseline_real_pipeline_save_records_final_scale(self):
+        from generator_tabs.cmyk_tab import ProgramAnalysisWorker
+
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+
+        def analyze_real_program(
+            svg_path,
+            settings,
+            cancel_check=None,
+        ):
+            contours = converter.read_svg(
+                svg_path,
+                settings,
+            )
+            plan = converter.plan_program(
+                contours,
+                settings,
+                cancel_check,
+            )
+            gcode = converter.contours_to_gcode(
+                contours,
+                settings,
+                plan,
+                {},
+            )
+            return {
+                "settings": settings,
+                "contours": plan["contours"],
+                "moves": [],
+                "gcode": gcode,
+                "stats": {},
+                "bed_compensation": plan["bed_compensation"],
+                "wave_baseline_grid": plan["wave_baseline_grid"],
+            }
+
+        host.analyze_program = analyze_real_program
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        tab._ensure_layers()
+        worker = ProgramAnalysisWorker(
+            host,
+            tab._effective_settings(),
+            converter.DEFAULT_MOTION_ESTIMATE_SCALE,
+            [
+                (channel, tab._layer_files[channel])
+                for channel in converter.CHANNELS
+            ],
+        )
+        results = {}
+        failures = []
+        worker.finished.connect(results.update)
+        worker.failed.connect(failures.append)
+
+        worker.run()
+
+        self.assertFalse(failures)
+        self.assertEqual(set(results), set(converter.CHANNELS))
+        self.assertEqual(tab._preflight_errors(results), [])
+        for record in results.values():
+            text = record["gcode"]
+            self.assertIn("Wave fixed baselines", text)
+            self.assertIn("row-locked projection", text)
+            self.assertIn("shared Wave row angles", text)
+            self.assertGreater(
+                record["wave_baseline_grid"]["pitch_mm"],
+                0.0,
+            )
+
+        tab._write_files(results)
+        manifest = Path(host.saved_paths["cyan"]).with_name(
+            "art-cmyk-set.json"
+        )
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertEqual(data["screen"]["style"], "waves_fixed")
+        self.assertTrue(data["screen"]["preserve_fixed_row_baselines"])
+        self.assertFalse(data["screen"]["preserve_exact_row_pitch"])
+        self.assertEqual(
+            data["wave_baseline_grid"]["instantaneous_gap_semantics"],
+            "varies_by_design",
+        )
+        self.assertGreater(
+            data["screen"]["final_baseline_pitch_mm"],
+            0.0,
+        )
+        self.assertEqual(
+            set(data["wave_baseline_grid"]["per_channel"]),
+            set(converter.CHANNELS),
+        )
+        import contextlib
+        import importlib.util
+        import io
+
+        checker_path = (
+            Path(__file__).resolve().parents[2]
+            / "tools"
+            / "check_cmyk_wave_spacing.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "check_cmyk_wave_spacing_integration",
+            checker_path,
+        )
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        with contextlib.redirect_stdout(io.StringIO()):
+            checker_result = checker.main(
+                [
+                    str(manifest),
+                    "--sample-columns",
+                    "31",
+                ]
+            )
+        self.assertEqual(
+            checker_result,
+            0,
+            "the saved fixed-baseline set must pass the final-coordinate "
+            "checker",
+        )
+
     def test_wave_preflight_rejects_missing_row_locked_gcode(self):
         host = FakeHost(self.image_path)
         host.settings_for_source = mock.Mock(
@@ -2417,7 +2842,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertFalse(unguarded.row_locked_compensation)
         self.assertIn(
-            "raw compensation may alter pitch",
+            "raw compensation may alter the row baselines",
             tab._summary_text().lower(),
         )
 
@@ -2498,7 +2923,14 @@ class CmykTabTests(unittest.TestCase):
             getattr(line, "wave_row_index", None)
             for line in tab._layers["m"]
         ]
+        before_baselines = [
+            getattr(line, "wave_baseline_mm", None)
+            for line in tab._layers["m"]
+        ]
         self.assertTrue(any(value is not None for value in before))
+        self.assertTrue(
+            any(value is not None for value in before_baselines)
+        )
 
         tab.offset_spins["m"][0].setValue(0.75)
         tab._ensure_layers()
@@ -2507,7 +2939,28 @@ class CmykTabTests(unittest.TestCase):
             getattr(line, "wave_row_index", None)
             for line in tab._layers["m"]
         ]
+        after_baselines = [
+            getattr(line, "wave_baseline_mm", None)
+            for line in tab._layers["m"]
+        ]
         self.assertEqual(after, before)
+        for baseline_before, baseline_after in zip(
+            before_baselines,
+            after_baselines,
+        ):
+            if baseline_before is None:
+                self.assertIsNone(baseline_after)
+                continue
+            self.assertAlmostEqual(
+                baseline_after[0],
+                baseline_before[0] + 0.75,
+                places=6,
+            )
+            self.assertAlmostEqual(
+                baseline_after[1],
+                baseline_before[1],
+                places=6,
+            )
 
     def test_measured_alignment_sets_opposite_corrections(self):
         tab = self.make_tab()
@@ -2634,6 +3087,7 @@ class CmykTabTests(unittest.TestCase):
             tuple(converter.SCREEN_ANGLES_DEG.values()),
         )
         identity_gcode = {}
+        identity_grids = {}
         for channel in converter.CHANNELS:
             angle = converter.SCREEN_ANGLES_DEG[channel]
             channel_settings = dataclasses.replace(
@@ -2645,6 +3099,7 @@ class CmykTabTests(unittest.TestCase):
                 str(tab._layer_files[channel]), channel_settings
             )
             plan = converter.plan_program(contours, channel_settings)
+            identity_grids[channel] = plan["wave_baseline_grid"]
             identity_gcode[channel] = converter.contours_to_gcode(
                 contours, channel_settings, plan
             )
@@ -2653,6 +3108,9 @@ class CmykTabTests(unittest.TestCase):
                 "gcode": identity_gcode[channel],
                 "lines": len(identity_gcode[channel].splitlines()),
                 "checks": dict(checks),
+                "final_scale": manifest_settings.scale,
+                "frame_center_mm": manifest_settings.frame_center_mm,
+                "wave_baseline_grid": identity_grids[channel],
                 "compensation": {
                     "mode": "row_locked_projection",
                     "projected_max_correction_mm": 0.5,
@@ -2678,7 +3136,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 4)
+        self.assertEqual(data["version"], 5)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(
@@ -2704,6 +3162,18 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertAlmostEqual(
             data["screen"]["effective_pitch_mm"],
+            data["screen"]["final_baseline_pitch_mm"],
+        )
+        self.assertEqual(
+            data["wave_baseline_grid"]["mode"],
+            "constant_baselines",
+        )
+        self.assertEqual(
+            set(data["wave_baseline_grid"]["per_channel"]),
+            set(converter.CHANNELS),
+        )
+        self.assertEqual(
+            data["screen"]["tab_effective_pitch_before_fit_mm"],
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
         )
         self.assertEqual(data["ink_processing"]["weights"]["y"], 1.0)
@@ -2811,6 +3281,95 @@ class CmykTabTests(unittest.TestCase):
         self.assertIn("Set manifest", tab.status.text())
         self.assertIn("Identity/reach PASS", tab.status.text())
         self.assertIn("row spacing", tab.status.text())
+
+    def test_fixed_baseline_manifest_records_the_final_fitted_pitch(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        tab.pitch.setValue(1.21)
+        tab.scale_pct.setValue(100)
+        grid = {
+            "mode": "fixed_baselines",
+            "pitch_mm": 2.129,
+            "signed_pitch_mm": -2.129,
+            "origin_mm": 50.0,
+            "rows": 48,
+            "first_row": 0,
+            "last_row": 47,
+            "maximum_residual_mm": 0.00445,
+            "screen_angle_deg": -15.0,
+            "minimum_clearance_scale": 1.0,
+        }
+        checks = self.clean_checks()
+        results = {}
+        for channel in converter.CHANNELS:
+            gcode = (
+                "(Wave fixed baselines: pitch 2.1290 mm, origin 50.0000 mm, "
+                "rows 48, screen angle -15.000 deg, row-local depth, "
+                "visible gaps vary by design)\n"
+                "M5\nM3\nG1 X0 Y0\nG1 X1 Y1\nM5\n"
+            )
+            results[channel] = {
+                "gcode": gcode,
+                "lines": len(gcode.splitlines()),
+                "checks": dict(checks),
+                "final_scale": 1.7595,
+                "frame_center_mm": (71.5, 101.8),
+                "wave_baseline_grid": dict(grid),
+            }
+        written = []
+        for channel in converter.CHANNELS:
+            path = (
+                Path(host._folder)
+                / f"fitted-cmyk-{converter.CHANNEL_LABELS[channel].lower()}.gcode"
+            )
+            path.write_text(
+                results[channel]["gcode"],
+                encoding="utf-8",
+            )
+            written.append(str(path))
+        manifest = tab._write_set_manifest(written, results)
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+
+        self.assertEqual(data["version"], 5)
+        self.assertEqual(data["screen"]["style"], "waves_fixed")
+        self.assertAlmostEqual(
+            data["screen"]["tab_effective_pitch_before_fit_mm"],
+            1.21,
+        )
+        self.assertAlmostEqual(
+            data["screen"]["effective_pitch_mm"],
+            2.129,
+        )
+        self.assertAlmostEqual(
+            data["screen"]["final_baseline_pitch_mm"],
+            2.129,
+        )
+        self.assertAlmostEqual(data["screen"]["final_fit_scale"], 1.7595)
+        self.assertEqual(
+            data["screen"]["row_layout"],
+            "fixed_baselines_variable_instantaneous_gaps",
+        )
+        self.assertTrue(data["screen"]["preserve_fixed_row_baselines"])
+        self.assertFalse(data["screen"]["preserve_exact_row_pitch"])
+        self.assertEqual(
+            data["wave_baseline_grid"]["instantaneous_gap_semantics"],
+            "varies_by_design",
+        )
+        self.assertEqual(
+            set(data["wave_baseline_grid"]["per_channel"]),
+            set(converter.CHANNELS),
+        )
+        self.assertEqual(
+            list(data["frame_center_mm"]),
+            [71.5, 101.8],
+        )
 
     def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):
         host = FakeHost(self.image_path)

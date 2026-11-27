@@ -2611,6 +2611,7 @@ class MainWindow(QMainWindow):
             "gcode": gcode,
             "stats": stats,
             "bed_compensation": program_plan.get("bed_compensation"),
+            "wave_baseline_grid": program_plan.get("wave_baseline_grid"),
         }
 
     def export_program_set(self, entries, base_path=None, default_base=""):

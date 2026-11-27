@@ -1,9 +1,10 @@
 # ADR-009: Optional post-registration host bed compensation
 
 - Status: accepted and implemented; base profile bench-verified, row-locked
-  Wave physical verification pending; shared cross-ink translation implemented
+  Wave physical verification pending; shared cross-ink translation and
+  fixed-baseline variable-depth software verification implemented
 - Date: 2026-10-23
-- Updated: 2026-11-22
+- Updated: 2026-11-26
 
 ## Context
 
@@ -40,10 +41,13 @@ existing Machine-tab path remains editable: **Browse...** selects a replacement,
 The numeric bed/stock/radius defaults above are superseded by ADR-012; the
 compensation transform and projection rules in this ADR remain current.
 
-CMYK **Wave screen - equidistant rows** treats exact adjacent-row pitch as a
-hard geometry constraint. Its default spacing guard keeps the selected profile
-but applies a row-locked projection. The full measured field is evaluated in
-the effective screen frame, then averaged across the perpendicular row
+CMYK has two production Wave contracts. **Wave screen - equidistant rows**
+treats exact adjacent-row pitch as a hard geometry constraint.
+**Variable-depth Wave - fixed baselines** instead treats the equal row-baseline
+lattice as the hard constraint and permits the visible instantaneous gaps to
+vary with row-local depth. Both default spacing guards keep the selected
+profile but apply a row-locked projection. The full measured field is evaluated
+in the effective screen frame, then averaged across the perpendicular row
 coordinate at each along-row position:
 
 ```text
@@ -52,10 +56,10 @@ machine_xy = R(theta) * bed_xy + R(theta) * C_row_locked(u)
 ```
 
 Every parallel row receives the same displacement at a given `u`, so their
-relative spacing is unchanged. This retains the along-row and common part of
-the measured correction; the row-dependent normal part is discarded because
-it cannot coexist with an exact uniform lattice. Raw unconstrained
-compensation remains an explicit operator opt-in.
+relative baseline spacing is unchanged. This retains the along-row and common
+part of the measured correction; the row-dependent normal part is discarded
+because it cannot coexist with a fixed uniform baseline lattice. Raw
+unconstrained compensation remains an explicit operator opt-in.
 
 The four projected fields also need one common translation. Resolving the same
 measured profile on the cyan, magenta, yellow, and black row axes produces
@@ -142,6 +146,12 @@ program unchanged.
 - Row-locked saved G-code identifies the source profile fingerprint,
   projection maximum, row angle, and `row_locked_projection` manifest mode.
   It must not be described as applying the raw two-dimensional field.
+- Variable-depth fixed-baseline G-code records the final fitted baseline pitch
+  rather than the tab-local pre-fit pitch. Manifest version 5 records that
+  pitch, per-ink row grids, and whether instantaneous gaps are expected to
+  vary. The final-coordinate checker validates the baseline invariant and the
+  physical pen clearance; variable instantaneous spacing is not equated with
+  raw compensation failure.
 - Shared-translation normalization removes the systematic inter-ink global XY
   offset. It does not remove local pointwise differences between the four
   projected fields. On the default profile, relative to yellow, the

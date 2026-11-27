@@ -93,6 +93,10 @@ def scale_polylines(polylines, factor, width_mm, height_mm):
                 )
                 for x, y in line
             ],
+            point_transform=lambda point: (
+                centre_x + (point[0] - centre_x) * factor,
+                centre_y + (point[1] - centre_y) * factor,
+            ),
         )
         for line in polylines
     ]

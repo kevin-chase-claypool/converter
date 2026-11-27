@@ -205,6 +205,85 @@ class CheckCmykWaveSpacingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "shared row-angle lock"):
             self.checker.load_manifest(path)
 
+    def test_manifest_accepts_fixed_baselines_with_variable_gaps(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-manifest-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = folder / "set.json"
+        data = {
+            "kind": "cmyk-print-set",
+            "version": 5,
+            "bed_motion": "XY only (bed parked, precise)",
+            "bed_compensation_path": "",
+            "wave_baseline_grid": {
+                "mode": "fixed_baselines",
+                "pitch_mm": 2.129,
+                "instantaneous_gap_semantics": "varies_by_design",
+            },
+            "screen": {
+                "style": "waves_fixed",
+                "preserve_fixed_row_baselines": True,
+            },
+        }
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        loaded = self.checker.load_manifest(path)
+
+        self.assertEqual(
+            loaded["wave_baseline_grid"]["mode"],
+            "fixed_baselines",
+        )
+
+        data["wave_baseline_grid"]["instantaneous_gap_semantics"] = (
+            "constant"
+        )
+        path.write_text(json.dumps(data), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "variable instantaneous gaps"):
+            self.checker.load_manifest(path)
+
+    def test_fixed_baseline_audit_uses_emitted_row_baselines(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-fixed-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = folder / "rows.gcode"
+        path.write_text(
+            "\n".join(
+                (
+                    "(Wave fixed baselines: pitch 4.0000 mm, origin 0.0000 "
+                    "mm, rows 2, screen angle 0.000 deg, row-local depth, "
+                    "visible gaps vary by design)",
+                    "M5",
+                    "(wave row 0 baseline 0.0000 mm)",
+                    "M3",
+                    "G1 X0 Y0 F700",
+                    "G1 X10 Y0.4 F700",
+                    "M5",
+                    "G1 X0 Y4 F700",
+                    "(wave row 1 baseline 4.0000 mm)",
+                    "M3",
+                    "G1 X0 Y4 F700",
+                    "G1 X10 Y3.6 F700",
+                    "M5",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = self.checker.audit_fixed_baseline_program(
+            path,
+            0.0,
+            4.0,
+            sample_columns=9,
+            minimum_clearance_mm=1.05,
+        )
+
+        self.assertEqual(result["rows"], 2)
+        self.assertAlmostEqual(result["pitch_mm"], 4.0)
+        self.assertLessEqual(result["baseline_residual_mm"], 0.005)
+
     def test_audit_decodes_a_shared_rotating_bed_schedule(self):
         folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-rotating-"))
         self.addCleanup(
@@ -327,6 +406,79 @@ class CheckCmykWaveSpacingTests(unittest.TestCase):
             )
 
         self.assertEqual(result, 2)
+
+    def test_main_accepts_fixed_baselines_with_variable_visible_gaps(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-fixed-main-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        gcode = "\n".join(
+            (
+                "(Wave fixed baselines: pitch 4.0000 mm, origin 0.0000 mm, "
+                "rows 2, screen angle 0.000 deg, row-local depth, "
+                "visible gaps vary by design)",
+                "M5",
+                "(wave row 0 baseline 0.0000 mm)",
+                "M3",
+                "G1 X0 Y0 F700",
+                "G1 X10 Y0.4 F700",
+                "M5",
+                "G1 X0 Y4 F700",
+                "(wave row 1 baseline 4.0000 mm)",
+                "M3",
+                "G1 X0 Y4 F700",
+                "G1 X10 Y3.6 F700",
+                "M5",
+            )
+        ) + "\n"
+        files = {}
+        hashes = {}
+        for channel in ("c", "m", "y", "k"):
+            path = folder / f"{channel}.gcode"
+            path.write_text(gcode, encoding="utf-8")
+            files[channel] = path.name
+            hashes[channel] = self.checker.sha256_file(path)
+        manifest = folder / "set.json"
+        data = {
+            "kind": "cmyk-print-set",
+            "version": 5,
+            "bed_motion": "XY only (bed parked, precise)",
+            "bed_compensation_path": "",
+            "files": files,
+            "file_sha256": hashes,
+            "wave_baseline_grid": {
+                "mode": "fixed_baselines",
+                "pitch_mm": 4.0,
+                "instantaneous_gap_semantics": "varies_by_design",
+                "per_channel": {
+                    "c": {"pitch_mm": 4.0, "origin_mm": 0.0},
+                    "m": {"pitch_mm": 4.0, "origin_mm": 0.0},
+                    "y": {"pitch_mm": 4.0, "origin_mm": 0.0},
+                    "k": {"pitch_mm": 4.0, "origin_mm": 0.0},
+                },
+            },
+            "screen": {
+                "style": "waves_fixed",
+                "preserve_fixed_row_baselines": True,
+                "final_baseline_pitch_mm": 4.0,
+                "minimum_centerline_clearance_mm": 1.05,
+                "screen_angles_deg": {
+                    "c": 0.0,
+                    "m": 0.0,
+                    "y": 0.0,
+                    "k": 0.0,
+                },
+            },
+        }
+        manifest.write_text(json.dumps(data), encoding="utf-8")
+
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            result = self.checker.main(
+                [str(manifest), "--sample-columns", "3"]
+            )
+
+        self.assertEqual(result, 0)
+        self.assertIn("fixed uniform baselines", output.getvalue())
 
 
 if __name__ == "__main__":

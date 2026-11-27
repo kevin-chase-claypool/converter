@@ -446,6 +446,14 @@ Cycle Start with the pen loaded:
   and `4.20 mm`; the fourth row is an equidistant `3.36 mm` control. The field
   is `200 x 200 mm`, and one Cycle Start completes all sixteen patches.
   Regenerate with `python tools\make_cmyk_wave_coupon.py --letter`.
+- `..\samples\gcode\cmyk-variable-depth-wave-coupon.gcode` - one-run black-pen
+  coupon for **Variable-depth Wave - fixed baselines**. Four patches compare
+  XY-only and Xθ/Yθ at `3.36 mm` and `4.20 mm` paper pitch on a 0-degree
+  screen. Every patch uses row-lock bed compensation, a `0.8 mm` pen, `F700`,
+  and distinct row-local depth. Inspect the row bases for equal pitch, the
+  waves for row-specific amplitude/frequency, and the gaps for no contact.
+  Regenerate with
+  `python tools\make_cmyk_wave_coupon.py --fixed-baseline`.
 - `..\samples\gcode\bed-compensation-motion-test.gcode` - one-run
   compensated-versus-uncompensated XY/A tracking test for ordinary paper and a
   black `0.8 mm` Pigma Micron. Eleven cases compare parked-A horizontal and
@@ -525,7 +533,9 @@ Current tools:
     darkest edge of the generic screen model. This preserves the sky,
     highlights, and colour separation in the preview. If the current pitch
     would make each solid row cover too much of the page, Auto opens it to at
-    least `3.4` pen widths; every resulting row remains exactly equidistant.
+    least `3.4` pen widths. Equidistant rows keep that exact lattice;
+    fixed-baseline variable-depth rows keep the same baseline pitch while
+    their visible wavy gaps vary locally.
   - For other screen styles, tone controls come from a detail search over the
     real curve chain: maximum mid tone-weighted gradient with a clipping
     penalty, plus a target print mean clamped to the printable `0.30-0.75`
@@ -539,8 +549,9 @@ Current tools:
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
-  (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
-  with equidistant rows / interference (gyroid) / single line (TSP) /
+  (halftone dots / stipple dots / line screen / crosshatch levels / equidistant
+  Wave / variable-depth Wave with fixed baselines / interference (gyroid) /
+  single line (TSP) /
   topographic contours / rectilinear fill),
   dot pitch (with a **Match pen** button that sets one pen width for ordinary
   screens or pen plus edge gap for Wave screens at the current artwork scale),
@@ -657,12 +668,15 @@ Current tools:
   problem, not a pen offset.
   **Pass summary and preflight:** before saving, the tab shows the page,
   shared frame, Bed motion, centre hold, row-spacing guard, crosses and pen
-  offsets, then runs both the Wave row-pitch contract and the motion preflight
-  on each ink. A prominent **Row-pitch status** beside the Wave controls is
-  green only when the production equidistant screen, spacing guard, and a
-  shared rotating-bed row order are active. It is red when the legacy
-  diagnostic, raw compensation, or planner-optimized row order can change
-  spacing, and Save is blocked before planning. A deliberately nonuniform
+  offsets, then runs both the Wave row-baseline contract and the motion
+  preflight on each ink. A prominent **Row-pitch status** beside the Wave
+  controls is green for either production Wave mode when the spacing guard is
+  active and Xθ/Yθ uses an explicit row order. For equidistant rows the status
+  means instantaneous gaps stay at pitch. For variable-depth fixed baselines
+  it states that the equal row lattice is fixed while visible wavy separation
+  varies by design. The status is red when the legacy diagnostic, raw
+  compensation, or planner-optimized rotating rows can change the baseline
+  contract, and Save is blocked before planning. A deliberately unsafe
   comparison run requires the explicit **Allow nonuniform Wave diagnostic
   output** checkbox; that permission is not persisted in the image recipe and
   turns the status amber.
@@ -671,13 +685,16 @@ Current tools:
   pen-radius envelope against the configured reach. Hard violations block Save
   and warnings go to the log. Wave output also proves its final G-code contains
   the row-locked projection and shared row-angle headers when required.
-  A successful artwork save writes a version-4 `<name>-set.json` beside the
+  A successful artwork save writes a version-5 `<name>-set.json` beside the
   four files with the source hash, page and motion mode, bed-compensation
-  profile, complete image/screen recipe, sharpening amount and radius,
-  effective pitch, pen offsets, `row_pitch_preflight`, per-ink preflight
-  results, SHA-256 hashes for all four G-code files, parsed program identities,
-  and the identity/reach overlay-audit report. That report deliberately does
-  not claim row spacing passed.
+  profile, complete image/screen recipe, sharpening amount and radius, final
+  fitted baseline pitch, per-ink row grids, pen offsets, `row_pitch_preflight`,
+  per-ink preflight results, SHA-256 hashes for all four G-code files, parsed
+  program identities, and the identity/reach overlay-audit report. The pitch
+  is measured from the final row metadata after Artwork scale, global bed fit,
+  and any applicable pen transform, so it is no longer the pre-fit tab pitch
+  that could disagree with the G-code. The identity/reach report deliberately
+  does not claim row spacing passed.
   The Image group's **Save defaults for this image** button immediately writes
   the current complete CMYK recipe and artwork placement to the image's
   `.theta-layout.json` sidecar. This includes image controls, screen and row
@@ -687,14 +704,26 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. **Wave screen - equidistant rows** is the production
-  Wave screen. It translates one common
+  with a sub-pen offset. **Wave screen - equidistant rows** translates one common
   luminance-shaped waveform to every row with no row-specific vertical
   movement, so adjacent centre spacing remains exactly the configured pitch.
   Darker tone may increase the shared waveform depth, but every visible row at
   a given X position receives the same vertical displacement; darkness cannot
   move a row baseline or pull one row toward another. Tone still masks whole
   row segments where the source image has no ink.
+  **Variable-depth Wave - fixed baselines** is the second production Wave
+  mode. It keeps the same equally spaced baseline for every row,
+  `baseline_i = y0 + i * pitch`, but lets locally smoothed scene depth vary
+  each row's amplitude, phase, and winding rate. It does not try to keep every
+  instantaneous visible gap equal: those gaps widen and narrow with the
+  row-local waveforms, which is how depth is shown. When depth is zero every
+  row collapses onto its straight baseline. The screen enforces the pen plus
+  `0.25 mm` edge gap with a shortest-segment check; if a steep pair violates
+  the envelope, only the offending row pair is damped. The final scaled path
+  is checked again before planning. This mode is stored as `waves_fixed`;
+  existing `waves_even` recipes keep their separate exact-spacing geometry.
+  Imported-outline pen-width shrink is disabled for this self-screened mode so
+  it cannot narrow the configured physical row clearance.
   **Wave screen - legacy phase-locked depth (diagnostic)** is a temporary
   comparison mode. It restores the pre-2026-10-29 `waves_zero` geometry, in
   which each row's amplitude follows its own locally smoothed tone. It uses
@@ -704,19 +733,22 @@ Current tools:
   so its adjacent paper-space row gaps may vary. Use it only to compare the
   old Wave geometry against the production screen on the current mesh.
   **Vary Wave frequency across image (break banding)** is enabled by default
-  for the equidistant style. It smoothly varies the common carrier frequency
-  by up to `18 %`, using two non-matching modulation periods, so all row crests
-  and troughs do not repeat as fixed vertical bands. The phase and vertical
-  offset remain identical across every row at each X position, preserving exact
-  row pitch. Unchecking it restores the former constant-frequency carrier.
+  for both production Wave styles. For equidistant rows it smoothly varies the
+  common carrier frequency by up to `18 %`, using two non-matching modulation
+  periods, so crests and troughs do not repeat as fixed vertical bands while
+  the phase and vertical offset remain common. For fixed baselines the same
+  image-wide modulation is combined with row-local tone, so darker rows wind
+  faster without moving their baselines. Unchecking it leaves a constant base
+  frequency but does not remove the fixed-baseline mode's row-local phase.
   The selected **Row order** is saved in the set manifest and applies
   independently of the carrier-frequency choice.
-  **Preserve exact row pitch (row-lock bed compensation)** is enabled by
-  default for this style. It keeps the selected Machine-tab profile active but
-  projects its complete measured field into displacement common to every
-  parallel row. The row-normal component is averaged out because it would
-  otherwise change pitch; the retained field still applies the profile's
-  along-row and common positional correction as the final machine-XY transform.
+  **Preserve exact row pitch** changes to **Preserve fixed row baselines** for
+  the variable-depth mode. Both are enabled by default. The guard keeps the
+  selected Machine-tab profile active but projects its complete measured field
+  into displacement common to every parallel row. The row-normal component is
+  averaged out because it would otherwise change the baseline or instantaneous
+  gap; the retained field still applies the profile's along-row and common
+  positional correction as the final machine-XY transform.
   The four screen angles can otherwise produce different spatial mean vectors
   from the same profile. The CMYK worker therefore prepares all four
   projections once on a deterministic common bed-frame sampling disk, removes
@@ -727,10 +759,12 @@ Current tools:
   Processing order cannot choose the shared vector.
   Other screen styles inherit the raw profile unchanged. Unchecking the guard
   applies the raw two-dimensional field and explicitly accepts potentially
-  non-uniform rows. The saved manifest records `row_locked_projection`, the
+  nonuniform baselines. The saved manifest records `row_locked_projection`, the
   source-profile fingerprint, per-ink screen angles, projection sampling,
-  `shared_zero_mean` translation normalization, raw means by angle,
-  `preserve_exact_row_pitch: true`, and the exact common domain.
+  `shared_zero_mean` translation normalization, raw means by angle, and the
+  exact common domain. It records `preserve_exact_row_pitch: true` only for
+  equidistant rows and `preserve_fixed_row_baselines: true` for both production
+  baseline modes.
   The tab also records whether its UI preflight enforced row pitch or permitted
   a diagnostic override. A pen offset is a translation, so the tab retags each
   shifted Wave row rather than discarding `data-wave-row`; offsets therefore
@@ -739,10 +773,13 @@ Current tools:
   Verify a saved set with
   `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
   four manifest hashes, the row-locked header and profile identity, the
-  version-4 zero shared-translation record, and their final-paper adjacent-row
-  spread. For Xθ/Yθ it samples the linear X/Y/A
-  interpolation, rotates each point back onto the bed, and requires the
-  manifest and G-code to identify the shared row-angle lock. The current
+  version-5 zero shared-translation record, the final fitted pitch, and the
+  emitted fixed-baseline row metadata. For equidistant rows it measures the
+  final-paper adjacent-gap spread. For variable-depth rows it checks that the
+  baselines remain uniformly spaced while the actual row envelopes vary, and
+  verifies the final pen-plus-edge-gap clearance. For Xθ/Yθ it samples the
+  linear X/Y/A interpolation, rotates each point back onto the bed, and
+  requires the manifest and G-code to identify the shared row-angle lock. The current
   verified 199-column XY-only Ben2 spreads are `0.002448`, `0.002254`,
   `0.000149`, and `0.001541 mm` for cyan/magenta/yellow/black.
   Shared translation removes the systematic per-ink global offset only. The
@@ -760,9 +797,11 @@ Current tools:
   pitch smaller than the pen envelope is rejected with a planning error because
   no legal row spacing exists at that scale.
   Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four CMYK
-  screen angles. With the spacing guard active, the normal artwork path uses
-  exact row pitch. Legacy stored values `waves` and `waves_zero` are promoted
-  to the equidistant geometry unless a diagnostic tool explicitly requests
+  screen angles for both production modes. At zero depth the fixed-baseline
+  mode collapses every row to its straight equal baseline; at nonzero depth
+  it produces row-specific amplitude and frequency while retaining the final
+  pen clearance. Legacy stored values `waves` and `waves_zero` are promoted
+  to equidistant geometry unless a diagnostic tool explicitly requests
   `allow_variable_wave_spacing=True`; the explicitly labeled legacy diagnostic
   uses this path. **Path tolerance** controls how densely each sine is
   sampled in paper space, so emitted chords follow the shape instead of

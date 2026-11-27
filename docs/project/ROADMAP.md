@@ -539,6 +539,20 @@ task rather than treated as the active production path.
   software-coordinate delta relative to yellow), so full overlay/warp
   correction is still unchecked. A fresh four-pass physical test after one
   HOME + REGISTER is the remaining acceptance gate.
+  Status 2026-11-26 fixed-baseline variable depth: added the separate
+  **Variable-depth Wave - fixed baselines** production mode. Every row keeps
+  `baseline_i = y0 + i * pitch`; local scene depth drives row amplitude,
+  phase, and winding rate, while row-local pairwise damping enforces the
+  physical pen envelope. The final scaled path is checked again before
+  planning. Row-lock compensation and the explicit-row shared A schedule are
+  retained, and manifests now record the final fitted baseline pitch after
+  global fit instead of only the pre-fit tab pitch. The final-coordinate
+  checker validates fixed baselines and variable wave ranges for this mode and
+  continues to reject variable gaps for `waves_even`. Software coverage
+  includes zero-depth collapse, all four screen angles at `2.80/3.36/4.20 mm`,
+  both row orders, XY-only/Xθ/Yθ G-code, manifest, UI, and the new
+  `cmyk-variable-depth-wave-coupon.gcode`. Physical inspection of that coupon
+  on one registered sheet remains the acceptance gate.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

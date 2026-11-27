@@ -241,6 +241,63 @@ class ContourOrderTests(unittest.TestCase):
             [0, 0, 1, 1, 2, 2, 3, 3],
         )
 
+    def test_fixed_baseline_metadata_survives_svg_and_scaling(self):
+        rows = [
+            converter.WaveTrail(
+                [(0.0, 2.0), (10.0, 2.0)],
+                wave_row_index=0,
+                wave_baseline_mm=(1.0, 2.0),
+                wave_row_policy="fixed_baselines",
+            ),
+            converter.WaveTrail(
+                [(0.0, 6.0), (10.0, 6.0)],
+                wave_row_index=1,
+                wave_baseline_mm=(1.0, 6.0),
+                wave_row_policy="fixed_baselines",
+            ),
+        ]
+        document = converter.svg_document(
+            {"y": rows},
+            20.0,
+            10.0,
+            0.8,
+        )
+        self.assertIn('data-wave-baseline="1,2"', document)
+        self.assertIn('data-wave-policy="fixed_baselines"', document)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "fixed.svg"
+            path.write_text(document, encoding="utf-8")
+            contours = converter.read_svg(
+                str(path),
+                dataclasses.replace(
+                    converter.Settings(),
+                    flip_y=False,
+                    compensate_pen_width=False,
+                ),
+            )
+        self.assertEqual(
+            [row.wave_baseline_mm for row in contours],
+            [(1.0, 2.0), (1.0, 6.0)],
+        )
+        self.assertEqual(
+            [
+                getattr(row, "wave_row_policy", None)
+                for row in contours
+            ],
+            ["fixed_baselines", "fixed_baselines"],
+        )
+
+        scaled = scale_polylines(
+            contours,
+            factor=2.0,
+            width_mm=20.0,
+            height_mm=10.0,
+        )
+        self.assertEqual(
+            [row.wave_baseline_mm for row in scaled],
+            [(-8.0, -1.0), (-8.0, 7.0)],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
