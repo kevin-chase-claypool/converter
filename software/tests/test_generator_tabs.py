@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import math
 import os
 import shutil
 import sys
@@ -1003,6 +1004,87 @@ class ToolShellTests(unittest.TestCase):
         self.assertEqual(
             {getattr(contour, "ink", None) for contour in contours},
             set(converter.CHANNELS),
+        )
+
+    def test_cmyk_preview_keeps_all_registration_crosses_after_auto_fit(self):
+        from PIL import Image
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        folder = tempfile.mkdtemp(prefix="cmyk-preview-crosses-")
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        image_path = str(Path(folder) / "blank.png")
+        Image.new("RGB", (32, 32), "white").save(image_path)
+
+        window.svg_path.setText(image_path)
+        window.show_tool("CMYK")
+        tab = window.stack.currentWidget()
+        tab.page_w.setValue(60)
+        tab.page_h.setValue(60)
+        tab.margin.setValue(4)
+        tab.pitch.setValue(4.0)
+        tab.registration_marks.setChecked(True)
+        path, source = window.resolve_active_source()
+        window.pending_source_tab = source
+        worker = self.module.PreviewWorker(
+            window,
+            path,
+            window.settings_for_source(source),
+        )
+        finished = []
+        failed = []
+        worker.finished.connect(finished.append)
+        worker.failed.connect(failed.append)
+
+        worker.run()
+
+        self.assertEqual(failed, [])
+        self.assertEqual(len(finished), 1)
+        contours = finished[0][1]
+        marks = {}
+        for contour in contours:
+            mark_id = getattr(contour, "registration_mark_id", None)
+            if mark_id is not None:
+                marks.setdefault(getattr(contour, "ink", None), set()).add(
+                    mark_id
+                )
+        self.assertEqual(
+            marks,
+            {
+                channel: {
+                    "CORNER-NE",
+                    "CORNER-NW",
+                    "CORNER-SE",
+                    "CORNER-SW",
+                }
+                for channel in self.module.converter.CHANNELS
+            },
+        )
+        fitted_settings = finished[0][0]
+        planning_radius = self.module.converter.planning_envelope(
+            fitted_settings
+        )["planning_radius_mm"]
+        mark_contours = [
+            contour
+            for contour in contours
+            if getattr(contour, "registration_mark_id", None) is not None
+        ]
+        mark_radius = max(
+            math.hypot(x, y)
+            for contour in mark_contours
+            for x, y in contour
+        )
+        self.assertLessEqual(mark_radius, planning_radius + 1e-6)
+        self.assertGreater(mark_radius, planning_radius * 0.5)
+        self.assertTrue(
+            all(
+                self.module.converter.distance(
+                    contour[0],
+                    contour[-1],
+                )
+                >= 1.0
+                for contour in mark_contours
+            )
         )
 
     def test_gl_preview_builds_buffers_for_ink_colors(self):

@@ -40,6 +40,14 @@ the same G54 frame centre, compensation profile, compensation and pen-radius
 reserves, planning radius, final fitted scale, and A-planning identity. Wave
 row-locked files retain their per-ink screen-angle identity as a separate check.
 
+Registration crosses are control geometry rather than artwork. Planning removes
+them before the artwork clipping pass and then places them in the bed frame. If
+auto-fit would scale their page-corner layout outside the circular planning
+envelope, the four centres are pulled inward onto a safe inscribed rectangle
+and their arm length is capped at `5 mm`. Manual layouts that already fit are
+left at their page margins. This keeps the same named crosses visible in
+preview and present in every saved program instead of silently clipping them.
+
 The registration audit:
 
 1. Parses the final `G1` machine points between each named mark's `M3` and `M5`.
@@ -74,7 +82,8 @@ vectors.
 - A missing, duplicated, translated, rotated, or scaled registration pattern
   blocks the CMYK set instead of producing a misleading identity-only PASS.
 - Corner crosses are enabled by default and are now required release geometry
-  for CMYK artwork. Calibration sheets keep their own fiducial workflow.
+  for CMYK artwork. Bed/fit scaling cannot clip or hide the control marks.
+  Calibration sheets keep their own fiducial workflow.
 - The audit uses the selected profile and row angle to reverse the same
   compensation transform that the planner applied. Header identity alone is
   not accepted as pointwise evidence.

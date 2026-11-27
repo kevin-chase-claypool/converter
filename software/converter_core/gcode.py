@@ -476,6 +476,161 @@ def planning_envelope(settings):
     }
 
 
+def _recenter_points(contour, source_center, placement):
+    return retag_contour(
+        contour,
+        [
+            (
+                point[0] - source_center[0] + placement[0],
+                point[1] - source_center[1] + placement[1],
+            )
+            for point in contour
+        ],
+        point_transform=lambda point: (
+            point[0] - source_center[0] + placement[0],
+            point[1] - source_center[1] + placement[1],
+        ),
+    )
+
+
+def _prepare_registration_mark_contours(
+    contours,
+    source_center,
+    placement,
+    planning_radius_mm,
+):
+    """Keep shared registration crosses inside the circular print envelope.
+
+    Page-fit scaling can move rectangular page corners beyond the round bed.
+    Registration crosses are control geometry, so they must survive clipping.
+    Their page-relative layout is preserved while it fits; otherwise the four
+    cross centres are pulled onto a safe inscribed rectangle. Pen offsets stay
+    absolute paper-space millimetres rather than being multiplied by bed fit.
+    """
+    if not contours:
+        return []
+    transformed = [
+        _recenter_points(contour, source_center, placement)
+        for contour in contours
+    ]
+    normalized = []
+    for contour in transformed:
+        center = getattr(
+            contour,
+            "registration_mark_center_mm",
+            None,
+        )
+        if center is None or len(contour) < 2:
+            continue
+        offset = tuple(
+            getattr(
+                contour,
+                "registration_mark_pen_offset_mm",
+                (0.0, 0.0),
+            )
+        )
+        start, end = contour[0], contour[-1]
+        half_vector = (
+            0.5 * (end[0] - start[0]),
+            0.5 * (end[1] - start[1]),
+        )
+        midpoint = (
+            center[0] + offset[0],
+            center[1] + offset[1],
+        )
+        points = [
+            (
+                midpoint[0] - half_vector[0],
+                midpoint[1] - half_vector[1],
+            ),
+            (
+                midpoint[0] + half_vector[0],
+                midpoint[1] + half_vector[1],
+            ),
+        ]
+        normalized.append(
+            (
+                retag_contour(contour, points),
+                half_vector,
+            )
+        )
+    if not normalized:
+        return []
+
+    max_radius = max(
+        math.hypot(point[0], point[1])
+        for contour, _half_vector in normalized
+        for point in contour
+    )
+    safe_radius = max(0.1, float(planning_radius_mm) * 0.98)
+    if max_radius <= safe_radius:
+        return [contour for contour, _half_vector in normalized]
+
+    max_x = max(
+        abs(contour.registration_mark_center_mm[0])
+        for contour, _half_vector in normalized
+    )
+    max_y = max(
+        abs(contour.registration_mark_center_mm[1])
+        for contour, _half_vector in normalized
+    )
+    max_half = max(
+        math.hypot(*half_vector)
+        for _contour, half_vector in normalized
+    )
+    half_limit = min(5.0, max(0.5, safe_radius / (3.0 * math.sqrt(2.0))))
+    arm_half = min(max_half, half_limit)
+    safe_axis = max(
+        0.0,
+        safe_radius / math.sqrt(2.0) - arm_half,
+    )
+    target_x = min(max_x, safe_axis)
+    target_y = min(max_y, safe_axis)
+
+    rebuilt = []
+    for contour, half_vector in normalized:
+        center = contour.registration_mark_center_mm
+        offset = getattr(
+            contour,
+            "registration_mark_pen_offset_mm",
+            (0.0, 0.0),
+        )
+        target_center = (
+            math.copysign(target_x, center[0])
+            if abs(center[0]) > 1e-9
+            else 0.0,
+            math.copysign(target_y, center[1])
+            if abs(center[1]) > 1e-9
+            else 0.0,
+        )
+        midpoint = (
+            target_center[0] + offset[0],
+            target_center[1] + offset[1],
+        )
+        if arm_half > 1e-9:
+            length = math.hypot(*half_vector)
+            direction = (
+                half_vector[0] / length,
+                half_vector[1] / length,
+            )
+        else:
+            direction = (1.0, 0.0)
+        points = [
+            (
+                midpoint[0] - arm_half * direction[0],
+                midpoint[1] - arm_half * direction[1],
+            ),
+            (
+                midpoint[0] + arm_half * direction[0],
+                midpoint[1] + arm_half * direction[1],
+            ),
+        ]
+        rebuilt_contour = retag_contour(contour, points)
+        rebuilt_contour.registration_mark_center_mm = target_center
+        rebuilt.append(rebuilt_contour)
+    return rebuilt
+
+
 def plan_program(contours, settings, cancel_check=None):
     """Plan clipped contours in the G54 bed-center work frame.
 
@@ -513,27 +668,28 @@ def plan_program(contours, settings, cancel_check=None):
     placement_x = float(getattr(settings, "artwork_offset_x_mm", 0.0))
     placement_y = float(getattr(settings, "artwork_offset_y_mm", 0.0))
     clip_center = (source_center[0] - placement_x, source_center[1] - placement_y)
+    registration_contours = [
+        contour
+        for contour in contours
+        if getattr(contour, "registration_mark_id", None) is not None
+    ]
+    drawable_contours = [
+        contour
+        for contour in contours
+        if getattr(contour, "registration_mark_id", None) is None
+    ]
     clipped_contours = clip_contours_to_bed(
-        contours,
+        drawable_contours,
         clip_center,
         radius,
         cancel_check,
     )
     center = (0.0, 0.0)
     clipped_contours = [
-        retag_contour(
+        _recenter_points(
             contour,
-            [
-                (
-                    point[0] - source_center[0] + placement_x,
-                    point[1] - source_center[1] + placement_y,
-                )
-                for point in contour
-            ],
-            point_transform=lambda point: (
-                point[0] - source_center[0] + placement_x,
-                point[1] - source_center[1] + placement_y,
-            ),
+            source_center,
+            (placement_x, placement_y),
         )
         for contour in clipped_contours
     ]
@@ -545,6 +701,14 @@ def plan_program(contours, settings, cancel_check=None):
             getattr(settings, "path_join_tolerance_mm", 0.02),
             cancel_check,
         )
+    clipped_contours.extend(
+        _prepare_registration_mark_contours(
+            registration_contours,
+            source_center,
+            (placement_x, placement_y),
+            radius,
+        )
+    )
     if bed_compensation is not None and bool(
         getattr(settings, "row_locked_compensation", False)
     ):

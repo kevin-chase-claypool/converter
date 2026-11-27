@@ -658,6 +658,12 @@ Current tools:
   four-point registration geometry used by the release gate, not the mechanism
   that centers the layers. Keep them enabled for a plot set: without them Save
   is blocked because the app cannot prove pointwise emitted registration.
+  Registration crosses are control geometry, so they are not subject to the
+  artwork clipping pass. If **Fill bed** or **Fit inside** would scale their
+  rectangular page corners beyond the round planning envelope, the planner
+  pulls the four cross centres inward and caps the printed arm length at
+  `5 mm` while preserving the four IDs. The same positioned arms appear in the
+  shared preview and in all four G-code files.
   **Running the four passes:** call `G65 P113` once before the set (HOME +
   REGISTER), then run the files back to back. Each file begins with `G54`
   and its own first fed travel to its start point, and ends with a full pen

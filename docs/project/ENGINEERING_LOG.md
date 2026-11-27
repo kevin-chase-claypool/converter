@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261127-cmyk-preview-registration-crosses"></a>
+### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Keep CMYK registration crosses visible after automatic fit
+
+- Selecting **Corner crosses (all inks)** could produce a CMYK preview with no
+  visible crosses. The preview worker returned zero registration contours.
+- A manual 1:1 differential retained all `32` arms, identifying automatic fit
+  plus the circular reach clip as the cause: rectangular page corners were
+  scaled outside the round planning envelope and removed with ordinary artwork.
+- Registration contours now bypass the artwork clipping pass. They are
+  recentered into the bed frame, left unchanged when they already fit, and
+  pulled onto a safe inscribed layout when automatic fit would clip them.
+- The safe layout preserves all four IDs and quadrant order, caps arm
+  half-length at `5 mm`, and keeps pen offsets as absolute paper-space
+  corrections rather than multiplying them by bed fit.
+- A blank `32 x 32` source on a `60 x 60 mm` auto-fitted CMYK page now produces
+  four IDs for each ink. The furthest arm stays inside `98 %` of the planning
+  radius, remains outside the inner half of the drawable field, and every arm
+  is at least `1 mm` long.
+- Focused generator, CMYK, overlay, identity, and rotating-row suites pass
+  `195` tests with one expected OpenGL-context skip.
+- Complete converter discovery passes `682` tests with one expected
+  OpenGL-context skip.
+- Preview and G-code now share the prepared cross layout. A fresh sparse print
+  after one HOME + REGISTER remains required.
+- Evidence: `WSW-20261127-002`;
+  `docs/changes/windows-software/2026/2026-11-27-cmyk-preview-registration-crosses.md`;
+  `ADR-013`.
+- Category: windows-software, cmyk, preview, registration, fiducial, auto-fit,
+  clipping, bug-fix, physical-validation-pending.
+
 <a id="elog-20261127-cmyk-gcode-registration-gate"></a>
 ### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Gate CMYK release on pointwise G-code registration
 
