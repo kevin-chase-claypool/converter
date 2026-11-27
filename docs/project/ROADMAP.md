@@ -352,6 +352,12 @@ task rather than treated as the active production path.
   a 100-contour exact move build `4.891 -> 2.423 s` (`2.02x`). The remaining
   opportunity is replacing repeated local-affine lookup with a triangulated or
   precomputed table, then measuring a complete dense save.
+  Status 2026-11-27 ink preview mesh: simulated CMYK strokes now use six
+  triangle vertices per segment so high zoom has continuous miter joins instead
+  of wide-line notches. A `142,387`-move mixed preview still built in `3.9 s`;
+  combined four-ink VBO memory and build time at the densest supported preview
+  have not been profiled and remain part of this dense-preview optimization
+  work.
 
 ## Phase 5: toolhead
 
@@ -591,6 +597,12 @@ task rather than treated as the active production path.
   `0.10 mm`, continuous carrier coverage through textured dark tone, and a
   narrow `16 %` tonal difference to produce more than `3.5x` neutral amplitude
   contrast at maximum intensity.
+  Status 2026-11-27 preview separation: `ADR-014` replaces wide ink-simulation
+  OpenGL lines with a multisampled miter-joined triangle ribbon. The live
+  Black-only preview at the reported settings retained smooth joins through
+  six zoom levels with no repeating saw teeth. This resolves the preview
+  defect; physical striation, registration, and ink-spread qualification on
+  the coupon remain open.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

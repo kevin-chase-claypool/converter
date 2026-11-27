@@ -199,6 +199,110 @@ def ink_vertex_colors(
     return artwork_colors, drawn_colors
 
 
+def ink_ribbon_vertices(
+    entries,
+    half_width,
+    mix=0.0,
+    visible_inks=None,
+    ink_colors=None,
+    miter_limit=4.0,
+):
+    """Return triangle-ribbon vertices for thick ink-simulation strokes.
+
+    OpenGL draws wide ``GL_LINES`` as independent rectangles, so large zoom
+    levels expose a notch at every segment join. OpenGL also requires distinct
+    draw calls for separate line strips. This mesh instead emits two triangles
+    per segment and shares a clamped miter edge between adjacent segments. It
+    aggregates every visible contour into one draw call without joining
+    separate contours.
+    """
+    shown = (
+        (lambda ink: True)
+        if visible_inks is None
+        else (lambda ink: ink in visible_inks)
+    )
+    if not math.isfinite(float(half_width)) or float(half_width) <= 0.0:
+        raise ValueError("half_width must be a positive finite number")
+    half_width = float(half_width)
+    miter_limit = max(1.0, float(miter_limit))
+    points = []
+    colors = []
+    for contour, ink in entries:
+        if not shown(ink):
+            continue
+        override = (ink_colors or {}).get(ink)
+        color = (
+            rgb_floats(override, mix)
+            if override is not None
+            else ink_color_floats(
+                converter.CHANNEL_COLORS.get(ink, "#111111"),
+                mix,
+            )
+        )
+        clean = []
+        for raw_point in contour:
+            point = (float(raw_point[0]), float(raw_point[1]))
+            if not all(math.isfinite(value) for value in point):
+                continue
+            if clean and math.dist(clean[-1], point) <= 1e-9:
+                continue
+            clean.append(point)
+        if len(clean) < 2:
+            continue
+
+        segment_normals = []
+        for start, end in zip(clean, clean[1:]):
+            dx = end[0] - start[0]
+            dy = end[1] - start[1]
+            length = math.hypot(dx, dy)
+            tangent = (dx / length, dy / length)
+            segment_normals.append((-tangent[1], tangent[0]))
+
+        vertex_normals = [segment_normals[0]]
+        for previous, following in zip(segment_normals, segment_normals[1:]):
+            sx = previous[0] + following[0]
+            sy = previous[1] + following[1]
+            length = math.hypot(sx, sy)
+            if length <= 1e-9:
+                vertex_normals.append(following)
+                continue
+            bisector = (sx / length, sy / length)
+            along = abs(
+                bisector[0] * following[0]
+                + bisector[1] * following[1]
+            )
+            scale = min(
+                miter_limit,
+                1.0 / max(along, 1e-9),
+            )
+            vertex_normals.append(
+                (bisector[0] * scale, bisector[1] * scale)
+            )
+        vertex_normals.append(segment_normals[-1])
+
+        left = []
+        right = []
+        for point, normal in zip(clean, vertex_normals):
+            offset_x = normal[0] * half_width
+            offset_y = normal[1] * half_width
+            left.append((point[0] + offset_x, point[1] + offset_y))
+            right.append((point[0] - offset_x, point[1] - offset_y))
+
+        for index in range(len(clean) - 1):
+            triangles = (
+                left[index],
+                right[index],
+                left[index + 1],
+                right[index],
+                right[index + 1],
+                left[index + 1],
+            )
+            for x, y in triangles:
+                points.extend((x, y))
+                colors.extend(color)
+    return points, colors
+
+
 # Preview shaders. ``ink_color`` is only consumed when the per-ink colour
 # buffers are bound (CMYK); every other tool leaves ``use_vertex_color`` at 0
 # and the existing uniform colour drives the fragment output.
@@ -231,7 +335,9 @@ PREVIEW_FRAGMENT_SHADER = """uniform vec4 color;
 
 class GLPreview(QOpenGLWidget):
     GL_LINES = 0x0001
+    GL_TRIANGLES = 0x0004
     GL_FLOAT = 0x1406
+    GL_MULTISAMPLE = 0x809D
 
     # Emitted while the artwork is dragged, in machine millimetres relative to
     # the registered bed center, so the placement fields can follow the drag.
@@ -308,6 +414,7 @@ class GLPreview(QOpenGLWidget):
         funcs.glClearColor(1.0, 1.0, 1.0, 1.0)
         funcs.glDisable(0x0B71)  # GL_DEPTH_TEST
         funcs.glEnable(0x0BE2)   # GL_BLEND
+        funcs.glEnable(self.GL_MULTISAMPLE)
         funcs.glBlendFunc(0x0302, 0x0303)
 
         self.program = QOpenGLShaderProgram(self)
@@ -333,7 +440,7 @@ class GLPreview(QOpenGLWidget):
             "color": self.program.uniformLocation("color"),
             "use_vertex_color": self.program.uniformLocation("use_vertex_color"),
         }
-        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "artwork_color", "artwork_solid_color", "drawn_path", "drawn_path_color", "travel", "motion"):
+        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "artwork_color", "artwork_solid_color", "artwork_mesh", "artwork_mesh_color", "drawn_path", "drawn_path_color", "travel", "motion"):
             buf = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
             buf.setUsagePattern(QOpenGLBuffer.StaticDraw)
             buf.create()
@@ -542,6 +649,10 @@ class GLPreview(QOpenGLWidget):
             hidden_white=True,
             ink_colors=self.sim_ink_colors,
         )
+        ink_entries = [
+            (contour, getattr(contour, "ink", None))
+            for contour in self.contours
+        ]
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
                 artwork.extend([a[0], a[1], b[0], b[1]])
@@ -556,6 +667,26 @@ class GLPreview(QOpenGLWidget):
             bed_end = move.get("bed_end")
             if bed_start is not None and bed_end is not None:
                 artwork.extend([bed_start[0], bed_start[1], bed_end[0], bed_end[1]])
+                ink_entries.append(
+                    (
+                        [bed_start, bed_end],
+                        self._move_ink(move),
+                    )
+                )
+        artwork_mesh = []
+        artwork_mesh_colors = []
+        if artwork_colors is not None:
+            pen_mm = max(
+                1e-6,
+                float(getattr(self.settings, "pen_diameter_mm", 0.3)),
+            )
+            artwork_mesh, artwork_mesh_colors = ink_ribbon_vertices(
+                ink_entries,
+                half_width=pen_mm / 2.0,
+                mix=1.0 - self.sim_ink_strength(),
+                visible_inks=self.visible_inks,
+                ink_colors=self.sim_ink_colors,
+            )
 
         travel = []
         motion = []
@@ -613,6 +744,7 @@ class GLPreview(QOpenGLWidget):
             "debug_cross": array("f", debug_cross),
             "reach_circle": array("f", reach_circle),
             "artwork": array("f", artwork),
+            "artwork_mesh": array("f", artwork_mesh),
             "drawn_path": array("f", drawn_path),
             "travel": array("f", travel),
             "motion": array("f", motion),
@@ -623,6 +755,11 @@ class GLPreview(QOpenGLWidget):
                 "f", artwork_solid
             )
             self.vertex_arrays["drawn_path_color"] = array("f", drawn_colors or [])
+        if artwork_mesh:
+            self.vertex_arrays["artwork_mesh_color"] = array(
+                "f",
+                artwork_mesh_colors,
+            )
         self.vertex_counts = {
             name: len(values) // 2
             for name, values in self.vertex_arrays.items()
@@ -953,6 +1090,7 @@ class GLPreview(QOpenGLWidget):
         count=None,
         vertex_color=False,
         color_name=None,
+        mode=None,
     ):
         total = self.vertex_counts.get(name, 0)
         if count is None:
@@ -982,7 +1120,7 @@ class GLPreview(QOpenGLWidget):
             color_buf.bind()
             self.program.enableAttributeArray(1)
             self.program.setAttributeBuffer(1, self.GL_FLOAT, 0, 4, 0)
-        funcs.glDrawArrays(self.GL_LINES, 0, count)
+        funcs.glDrawArrays(mode or self.GL_LINES, 0, count)
         if color_buf is not None:
             self.program.disableAttributeArray(1)
             color_buf.release()
@@ -1062,26 +1200,21 @@ class GLPreview(QOpenGLWidget):
         # far in the drawn color — the boundary tracks where the pen is. Ink
         # simulation instead multiplies the solid ink layers over the paper,
         # showing the finished overprint the way translucent pens combine.
-        artwork_total = self.vertex_counts.get("artwork", 0)
+        artwork_total = self.vertex_counts.get("artwork_mesh", 0)
         simulate = (
             self.ink_simulation
             and artwork_total > 0
-            and self.color_vertex_counts.get("artwork_solid", 0)
+            and self.color_vertex_counts.get("artwork_mesh", 0)
             >= artwork_total
         )
         if simulate:
-            bounds_x = max(bounds[2] - bounds[0], 1e-9)
-            px_per_mm = self.width() / bounds_x
-            pen_mm = float(
-                getattr(self.settings, "pen_diameter_mm", 0.3)
-            )
             funcs.glBlendFunc(0x0306, 0x0000)  # GL_DST_COLOR, GL_ZERO
             self.draw_static(
-                "artwork",
+                "artwork_mesh",
                 self.undrawn_color,
-                max(1.0, pen_mm * px_per_mm),
+                1.0,
                 vertex_color=True,
-                color_name="artwork_solid",
+                mode=self.GL_TRIANGLES,
             )
             funcs.glBlendFunc(0x0302, 0x0303)
         else:
@@ -5080,15 +5213,25 @@ class MainWindow(QMainWindow):
             self.last_command_follow_time = now
 
 
-if __name__ == "__main__":
+PREVIEW_GL_SAMPLES = 8
+
+
+def configure_preview_gl_format():
+    """Request multisampling for smooth, thick ink-simulation strokes."""
     gl_format = QSurfaceFormat()
     gl_format.setRenderableType(QSurfaceFormat.OpenGL)
     gl_format.setVersion(2, 1)
     gl_format.setProfile(QSurfaceFormat.CompatibilityProfile)
     gl_format.setDepthBufferSize(0)
     gl_format.setStencilBufferSize(0)
+    gl_format.setSamples(PREVIEW_GL_SAMPLES)
     gl_format.setSwapBehavior(QSurfaceFormat.DoubleBuffer)
     QSurfaceFormat.setDefaultFormat(gl_format)
+    return gl_format
+
+
+if __name__ == "__main__":
+    configure_preview_gl_format()
     app = QApplication(sys.argv)
     win = MainWindow()
     win.show()

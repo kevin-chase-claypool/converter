@@ -486,7 +486,10 @@ fraction of a pixel it covers, so the fit-to-window view keeps the density
 the paper will get (zoom in for full-strength strokes). Mixing only happens
 where strokes overlap: keep the effective pitch (Dot pitch x Artwork scale,
 then the tone-adaptive factor of 1-3x) at or below the pen width for full
-coverage. An **Ink profile...** button loads
+coverage. Simulated pen strokes use a multisampled miter-joined triangle
+ribbon rather than wide OpenGL lines, so zooming in does not expose a notch at
+every generated segment or connect separate contours. An **Ink profile...**
+button loads
 the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
 multiplies your pens' measured transmittances instead of the display ink
 colours. **Help** has the shortcut list

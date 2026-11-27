@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261127-cmyk-preview-triangle-ribbons"></a>
+### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Separate CMYK preview joins from Wave geometry
+
+- The generator-side depth smoothing in `WSW-20261127-003` did not explain the
+  repeating black-preview saw teeth. A high-resolution PIL raster of the same
+  generated coordinates was smooth, while the live OpenGL preview produced a
+  notch at each thick-line segment join.
+- Replaced wide ink-simulation `GL_LINES` with an aggregated, multisampled
+  triangle mesh. Adjacent segments share a normalized clamped miter edge;
+  distinct contours remain separate and no transparent bridge is emitted.
+- A `GL_LINE_STRIP` experiment was rejected. Its transparent bridge vertices
+  cannot be hidden by multiply blending because source alpha is ignored, and
+  the strip joins created larger rectangles and trapezoids. Increasing image
+  sampling was also rejected because the source geometry was already smooth.
+- Added regressions for a shared miter join, exact absence of cross-contour
+  triangles, and multisampled triangle rendering.
+- A live Black-only rerun with the owner's `2.00 mm` pitch, period `4`,
+  period variation `40 %`, pen width `0.90 mm`, path tolerance `0.05 mm`, and
+  Depth intensity `300 %` produced `142,387` moves in `3.9 s`. The fitted view
+  and a six-level deep zoom retained smooth stroke joins with no repeating
+  saw-tooth notches.
+- Focused generator coverage passes `51` tests with one expected
+  OpenGL-context skip; focused CMYK coverage passes `135` tests. Complete
+  converter discovery passes `688` tests with one expected OpenGL-context
+  skip.
+- Evidence: `WSW-20261127-003`; `ADR-014`;
+  `docs/changes/windows-software/2026/2026-11-27-wave-depth-contrast-and-texture.md`.
+- Category: windows-software, cmyk, preview, opengl, triangle-ribbon,
+  wave-screen, regression.
+
 <a id="elog-20261127-wave-depth-contrast-and-texture"></a>
 ### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Make Wave depth intensity decisive without nested tone ripples
 
@@ -25,9 +55,10 @@
   mask and requires the generated carrier to span the solid region instead of
   fragmenting into repeated short waveforms.
 - A fresh app preview at `2.00 mm` pitch, period `4`, period variation `40 %`,
-  and Depth intensity `300 %` produced `142,387` moves in `3.7 s`. The
-  black-only close-up showed single smooth carriers with clear tonal amplitude
-  changes and no second waveform riding on them.
+  and Depth intensity `300 %` produced `142,387` moves in `3.7 s`. Its
+  generator-side carrier tests passed, but the live black-only preview still
+  showed segment-join saw teeth; the follow-up renderer event above identified
+  and removed that separate display defect.
 - Focused generator, CMYK, registration, and rotating-row suites pass `193`
   tests with one expected OpenGL-context skip.
 - Complete converter discovery passes `685` tests with one expected

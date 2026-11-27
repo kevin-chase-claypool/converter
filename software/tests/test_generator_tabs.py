@@ -70,6 +70,64 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(window.tool_actions["Convert"].isChecked())
         self.assertIs(window.stack.widget(0), window.dashboard)
 
+    def test_preview_requests_multisampled_triangle_antialiasing(self):
+        previous = self.module.QSurfaceFormat.defaultFormat()
+        self.addCleanup(
+            self.module.QSurfaceFormat.setDefaultFormat,
+            previous,
+        )
+        preview_format = self.module.configure_preview_gl_format()
+        self.assertGreaterEqual(preview_format.samples(), 4)
+        self.assertEqual(
+            self.module.GLPreview.GL_MULTISAMPLE,
+            0x809D,
+        )
+        self.assertEqual(
+            self.module.GLPreview.GL_TRIANGLES,
+            0x0004,
+        )
+
+    def test_ink_preview_mesh_does_not_bridge_distinct_contours(self):
+        points, colors = self.module.ink_ribbon_vertices(
+            [
+                ([(0.0, 0.0), (1.0, 0.0)], "c"),
+                ([(10.0, 0.0), (11.0, 0.0)], "m"),
+            ],
+            half_width=0.1,
+        )
+        # One two-triangle segment per contour, with no transparent bridge.
+        self.assertEqual(len(points) // 2, 12)
+        self.assertEqual(len(colors) // 4, 12)
+        self.assertTrue(
+            all(
+                0.0 <= points[index] <= 1.0 or 10.0 <= points[index] <= 11.0
+                for index in range(0, len(points), 2)
+            )
+        )
+
+    def test_ink_preview_mesh_shares_a_miter_at_line_joins(self):
+        points, _colors = self.module.ink_ribbon_vertices(
+            [([(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)], "k")],
+            half_width=0.1,
+        )
+        vertices = list(zip(points[0::2], points[1::2]))
+        outer_join = [
+            vertex
+            for vertex in vertices
+            if math.isclose(vertex[0], 0.9, abs_tol=1e-6)
+            and math.isclose(vertex[1], 0.1, abs_tol=1e-6)
+        ]
+        inner_join = [
+            vertex
+            for vertex in vertices
+            if math.isclose(vertex[0], 1.1, abs_tol=1e-6)
+            and math.isclose(vertex[1], -0.1, abs_tol=1e-6)
+        ]
+        # Adjacent segment triangles reuse the same miter edge. Drawing
+        # butt-ended segments instead creates the repeating notch on curves.
+        self.assertGreaterEqual(len(outer_join), 2)
+        self.assertGreaterEqual(len(inner_join), 2)
+
     def test_artwork_reimport_restores_saved_placement(self):
         with tempfile.TemporaryDirectory(prefix="theta-layout-") as folder:
             artwork = Path(folder) / "art.png"
