@@ -37,6 +37,11 @@ width; local image depth shortens the period and increases amplitude in dark
 areas, while light areas lengthen the period and flatten it. Equal row
 baselines remain fixed.
 
+**Depth intensity** controls a centered contrast curve on each channel's
+tonal drive. `100 %` uses the normal light-to-dark range; higher values make
+the waveform respond much more strongly at the extremes, while lower values
+soften amplitude and period differences.
+
 Each ink now uses its own separated local coverage after GCR to drive that
 waveform. Cyan, magenta, yellow, and black therefore have independent period
 and amplitude structures that combine in the finished CMYK print.
@@ -63,9 +68,11 @@ period and local-only safety correction.
 
 - Added **Wave period** with a default of `2.0 x pitch` and range `0.5-12.0`
   row pitches.
-- Added **Period variation** with a default of `60 %`. Dark rows shorten their
-  period and deepen the wave; light rows lengthen it and flatten toward the
-  baseline.
+- Added **Period variation** with a default of `35 %`. Dark channel portions
+  shorten their period and deepen row amplitude; light portions lengthen it
+  and flatten toward the baseline.
+- Added **Depth intensity** with a default of `100 %` and range `0-300 %`.
+  The same contrast-curved channel tone drives both amplitude and period.
 - The same depth controls amplitude and period. A `0 %` variation keeps a
   common period while amplitude still follows depth.
 - Hidden shared-scene depth was replaced by each channel's own local tone.
@@ -89,6 +96,10 @@ period and local-only safety correction.
   emitting straight lines.
 - **Match pen** uses that same calculation, so it sets a Wave-safe effective
   pitch rather than only the bare pen-plus-gap minimum.
+- The long effective-pitch explanation now occupies its own wrapped row.
+  The row-status label uses an ignored horizontal size policy, preventing
+  diagnostic text from widening every spin-box row or forcing the operator to
+  expand the sidebar.
 
 ## Verification
 
@@ -102,6 +113,11 @@ period and local-only safety correction.
   adjacent-row clearance.
 - The fixed-baseline SVG test verifies that period and variation metadata
   survive serialization and artwork scaling.
+- Depth-intensity regressions verify that the same tonal extremes produce at
+  least `1.5x` more amplitude contrast at `200 %` than at `40 %`, and that the
+  value reaches each ink and round-trips through the recipe.
+- A UI layout regression verifies the wrapped diagnostic labels have an
+  ignored horizontal size contribution.
 - The real-pipeline Save regression verifies that period controls round-trip,
   reach the recipe and manifest, and appear in emitted G-code.
 - A per-channel regression confirms each ink receives a distinct depth field,
@@ -109,9 +125,9 @@ period and local-only safety correction.
   black.
 - The impossible screenshot configuration fails in under `0.5 s` before any
   row pass. A 300 mm layer at a safe pitch completes in about `1.8 s`.
-- The focused CMYK, Xθ/Yθ, checker, coupon, and contour suites pass `157`
+- The focused CMYK, Xθ/Yθ, checker, coupon, and contour suites pass `160`
   tests.
-- Complete converter discovery passes `670` tests with one expected OpenGL
+- Complete converter discovery passes `673` tests with one expected OpenGL
   context skip.
 
 ## Struggles and rejected approaches
@@ -146,8 +162,9 @@ period and local-only safety correction.
 - `software/converter_core/gcode.py`: period evidence in the final G-code
   header and baseline grid.
 - `software/generator_tabs/cmyk_tab.py`: controls, live period readout,
-  per-channel depth routing, recipe/manifest persistence, Wave-safe Match pen,
-  and clearance-limit warning.
+  per-channel depth routing, depth intensity, recipe/manifest persistence,
+  Wave-safe Match pen, clearance-limit warning, and non-expanding wrapped
+  diagnostics.
 - `software/tests/test_cmyk_tab.py`,
   `software/tests/test_contour_order.py`: period and serialization regressions.
 - `software/README.md`, `docs/decisions/ADR-009-post-registration-bed-compensation.md`,

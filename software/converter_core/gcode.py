@@ -257,6 +257,7 @@ def _wave_baseline_grid(planned_jobs, settings):
     clearance_scales = []
     wave_periods = []
     wave_period_variations = []
+    wave_depth_intensities = []
     for _planned, points, _thetas, _strategies in planned_jobs:
         row_index = getattr(points, "wave_row_index", None)
         baseline = getattr(points, "wave_baseline_mm", None)
@@ -277,6 +278,13 @@ def _wave_baseline_grid(planned_jobs, settings):
         variation = getattr(points, "wave_period_variation", None)
         if variation is not None:
             wave_period_variations.append(float(variation))
+        intensity = getattr(
+            points,
+            "wave_depth_intensity",
+            None,
+        )
+        if intensity is not None:
+            wave_depth_intensities.append(float(intensity))
     if len(row_samples) < 2:
         return None
     if any(
@@ -340,6 +348,13 @@ def _wave_baseline_grid(planned_jobs, settings):
                 len(wave_period_variations) // 2
             ]
             if wave_period_variations
+            else None
+        ),
+        "wave_depth_intensity": (
+            sorted(wave_depth_intensities)[
+                len(wave_depth_intensities) // 2
+            ]
+            if wave_depth_intensities
             else None
         ),
     }
@@ -775,8 +790,8 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             (
                 "(Wave fixed baselines: pitch %.4f mm, origin %.4f mm, "
                 "rows %d, screen angle %.3f deg, base period %.2f x pitch, "
-                "period variation %.0f %%, row-local amplitude and period, "
-                "visible gaps vary by design)"
+                "period variation %.0f %%, depth intensity %.0f %%, "
+                "row-local amplitude and period, visible gaps vary by design)"
             )
             % (
                 wave_baseline_grid["pitch_mm"],
@@ -787,6 +802,13 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 float(
                     wave_baseline_grid.get(
                         "wave_period_variation",
+                    )
+                    or 0.0
+                )
+                * 100.0,
+                float(
+                    wave_baseline_grid.get(
+                        "wave_depth_intensity",
                     )
                     or 0.0
                 )

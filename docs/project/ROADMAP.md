@@ -568,7 +568,9 @@ task rather than treated as the active production path.
   four colors remain independent and combine into the print. Impossible
   sub-clearance geometry is rejected immediately and **Match pen** returns a
   Wave-safe pitch instead of running the expensive damping pass or emitting
-  straight rows.
+  straight rows. A **Depth intensity** control applies a centered tonal
+  contrast curve to both amplitude and period. The effective-pitch/status
+  diagnostics now wrap without increasing the sidebar's horizontal size.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

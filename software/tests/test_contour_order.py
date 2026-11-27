@@ -250,6 +250,7 @@ class ContourOrderTests(unittest.TestCase):
                 wave_row_policy="fixed_baselines",
                 wave_period_pitches=3.5,
                 wave_period_variation=0.8,
+                wave_depth_intensity=1.75,
             ),
             converter.WaveTrail(
                 [(0.0, 6.0), (10.0, 6.0)],
@@ -258,6 +259,7 @@ class ContourOrderTests(unittest.TestCase):
                 wave_row_policy="fixed_baselines",
                 wave_period_pitches=3.5,
                 wave_period_variation=0.8,
+                wave_depth_intensity=1.75,
             ),
         ]
         document = converter.svg_document(
@@ -270,6 +272,7 @@ class ContourOrderTests(unittest.TestCase):
         self.assertIn('data-wave-policy="fixed_baselines"', document)
         self.assertIn('data-wave-period-pitches="3.500000"', document)
         self.assertIn('data-wave-period-variation="0.800000"', document)
+        self.assertIn('data-wave-depth-intensity="1.750000"', document)
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "fixed.svg"
             path.write_text(document, encoding="utf-8")
@@ -305,6 +308,10 @@ class ContourOrderTests(unittest.TestCase):
                 for row in contours
             ],
             [0.8, 0.8],
+        )
+        self.assertEqual(
+            [row.wave_depth_intensity for row in contours],
+            [1.75, 1.75],
         )
 
         scaled = scale_polylines(

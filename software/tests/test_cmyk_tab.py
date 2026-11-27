@@ -1947,6 +1947,53 @@ class ScreeningTests(unittest.TestCase):
             "smaller Wave period must produce more visible cycles",
         )
 
+    def test_wave_depth_intensity_expands_amplitude_contrast(self):
+        size = 128
+        tone = self.np.ones((size, size), dtype="float32")
+        yy, _xx = self.np.mgrid[0:size, 0:size]
+        depth = (0.12 + 0.80 * yy / (size - 1)).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def contrast(intensity):
+            rows = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_fixed",
+                spacing_mm=3.36,
+                pen_diameter_mm=0.8,
+                row_clearance_mm=1.05,
+                depth_tone=depth,
+                seed=7,
+                wave_period_pitches=2.0,
+                wave_period_variation=0.35,
+                wave_depth_intensity=intensity,
+            )
+            rows = sorted(
+                (row for row in rows if len(row) > 100),
+                key=lambda row: row.wave_row_index,
+            )
+            quarter = max(1, len(rows) // 4)
+            amplitudes = [
+                max(y for _x, y in row) - min(y for _x, y in row)
+                for row in rows[:quarter] + rows[-quarter:]
+            ]
+            return max(amplitudes) - min(amplitudes)
+
+        soft = contrast(0.4)
+        strong = contrast(2.0)
+        self.assertGreater(
+            strong,
+            soft * 1.5,
+            "Depth intensity must expand light-to-dark amplitude contrast",
+        )
+
     def test_fixed_baseline_period_follows_local_channel_depth(self):
         size = 512
         tone = self.np.ones((size, size), dtype="float32")
@@ -2841,6 +2888,7 @@ class CmykTabTests(unittest.TestCase):
         tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
         tab.wave_period.setValue(3.5)
         tab.wave_period_variation.setValue(85)
+        tab.wave_depth_intensity.setValue(175)
 
         state = tab.artwork_layout_state()
         self.assertEqual(
@@ -2851,6 +2899,10 @@ class CmykTabTests(unittest.TestCase):
             state["screen"]["wave_period_variation_pct"],
             85.0,
         )
+        self.assertEqual(
+            state["screen"]["wave_depth_intensity_pct"],
+            175.0,
+        )
         self.assertIn(
             "period",
             tab.effective_pitch_label.text().lower(),
@@ -2858,9 +2910,11 @@ class CmykTabTests(unittest.TestCase):
 
         tab.wave_period.setValue(1.0)
         tab.wave_period_variation.setValue(0)
+        tab.wave_depth_intensity.setValue(50)
         self.assertTrue(tab.restore_artwork_layout_state(state))
         self.assertEqual(tab.wave_period.value(), 3.5)
         self.assertEqual(tab.wave_period_variation.value(), 85.0)
+        self.assertEqual(tab.wave_depth_intensity.value(), 175.0)
 
     def test_match_pen_sets_a_wave_safe_pitch_and_unblocks_status(self):
         tab = self.make_tab()
@@ -3019,6 +3073,7 @@ class CmykTabTests(unittest.TestCase):
             self.assertIn("Wave fixed baselines", text)
             self.assertIn("base period 2.00 x pitch", text)
             self.assertIn("period variation 35 %", text)
+            self.assertIn("depth intensity 100 %", text)
             self.assertIn("row-locked projection", text)
             self.assertIn("shared Wave row angles", text)
             self.assertGreater(
@@ -3028,6 +3083,10 @@ class CmykTabTests(unittest.TestCase):
             self.assertAlmostEqual(
                 record["wave_baseline_grid"]["wave_period_pitches"],
                 2.0,
+            )
+            self.assertAlmostEqual(
+                record["wave_baseline_grid"]["wave_depth_intensity"],
+                1.0,
             )
 
         tab._write_files(results)
@@ -3365,6 +3424,41 @@ class CmykTabTests(unittest.TestCase):
             "higher GCR must remove black density from cyan depth",
         )
 
+    def test_wave_depth_intensity_is_forwarded_per_ink(self):
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.style.setCurrentIndex(tab.style.findData("waves_fixed"))
+
+        def intensities(value):
+            tab.wave_depth_intensity.setValue(value)
+            with mock.patch.object(
+                converter,
+                "screen_channel",
+                return_value=[],
+            ) as screen_channel:
+                tab._ensure_layers()
+            return [
+                call.kwargs["wave_depth_intensity"]
+                for call in screen_channel.call_args_list
+            ]
+
+        self.assertEqual(intensities(40), [0.4] * 4)
+        self.assertEqual(intensities(200), [2.0] * 4)
+
+    def test_wave_panel_contains_long_diagnostics_without_expanding_rows(self):
+        from PySide6.QtWidgets import QSizePolicy
+
+        tab = self.make_tab()
+        self.assertTrue(tab.effective_pitch_label.wordWrap())
+        self.assertEqual(
+            tab.effective_pitch_label.sizePolicy().horizontalPolicy(),
+            QSizePolicy.Policy.Ignored,
+        )
+        self.assertTrue(tab.row_pitch_status.wordWrap())
+        self.assertEqual(
+            tab.row_pitch_status.sizePolicy().horizontalPolicy(),
+            QSizePolicy.Policy.Ignored,
+        )
+
     def test_pen_offsets_keep_the_shared_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))
         tab.scale_pct.setValue(280)
@@ -3663,6 +3757,7 @@ class CmykTabTests(unittest.TestCase):
         tab.scale_pct.setValue(100)
         tab.wave_period.setValue(3.5)
         tab.wave_period_variation.setValue(80)
+        tab.wave_depth_intensity.setValue(180)
         grid = {
             "mode": "fixed_baselines",
             "pitch_mm": 2.129,
@@ -3725,6 +3820,10 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             data["screen"]["wave_period_variation_pct"],
             80.0,
+        )
+        self.assertEqual(
+            data["screen"]["wave_depth_intensity_pct"],
+            180.0,
         )
         self.assertAlmostEqual(
             data["screen"]["base_wave_period_mm"],

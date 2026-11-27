@@ -63,6 +63,7 @@ WAVE_FREQUENCY_VARIATION = 0.18
 WAVE_FIXED_FREQUENCY_TONE_GAIN = 0.32
 DEFAULT_WAVE_PERIOD_PITCHES = 2.0
 DEFAULT_WAVE_PERIOD_VARIATION = 0.35
+DEFAULT_WAVE_DEPTH_INTENSITY = 1.0
 WAVE_CLEARANCE_SAFETY_MARGIN_MM = 0.02
 WAVE_NESTED_PITCH_SAFETY_FACTOR = 1.05
 # Black usually overpowers the other three pens (the r/PlotterArt threads
@@ -973,6 +974,7 @@ def _wave_rows(
     wave_frequency_variation=0.0,
     wave_period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
     wave_period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
+    wave_depth_intensity=DEFAULT_WAVE_DEPTH_INTENSITY,
     seed=0,
 ):
     """Sine rows with tone-driven depth and a safety envelope.
@@ -1141,6 +1143,21 @@ def _wave_rows(
                 for x_index in range(len(x_values))
             ]
         )
+    depth_intensity = max(0.0, float(wave_depth_intensity))
+    if abs(depth_intensity - 1.0) > 1e-9:
+        smoothed_tone = [
+            [
+                max(
+                    0.0,
+                    min(
+                        1.0,
+                        0.5 + (value - 0.5) * depth_intensity,
+                    ),
+                )
+                for value in row
+            ]
+            for row in smoothed_tone
+        ]
     shared_tone = [
         sum(row[x_index] for row in smoothed_tone)
         / max(len(smoothed_tone), 1)
@@ -1545,6 +1562,9 @@ def _wave_rows(
                     trail.wave_period_variation = float(
                         wave_period_variation
                     )
+                    trail.wave_depth_intensity = float(
+                        wave_depth_intensity
+                    )
                     rows.append(trail)
                 current = []
         if current and (len(current) - 1) * sample_step >= min_length_mm:
@@ -1562,6 +1582,7 @@ def _wave_rows(
             trail.wave_period_variation = float(
                 wave_period_variation
             )
+            trail.wave_depth_intensity = float(wave_depth_intensity)
             rows.append(trail)
     return rows
 
@@ -1692,6 +1713,7 @@ def screen_channel(
     wave_frequency_variation=0.0,
     wave_period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
     wave_period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
+    wave_depth_intensity=DEFAULT_WAVE_DEPTH_INTENSITY,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1719,6 +1741,8 @@ def screen_channel(
     Fixed-baseline depth uses ``wave_period_pitches`` as its base wavelength in
     row pitches. ``wave_period_variation`` shortens dark-row periods and
     lengthens light-row periods by up to that fractional amount.
+    ``wave_depth_intensity`` applies a centered contrast curve to each ink's
+    local depth before it drives period and amplitude.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1845,6 +1869,7 @@ def screen_channel(
             wave_frequency_variation=wave_frequency_variation,
             wave_period_pitches=wave_period_pitches,
             wave_period_variation=wave_period_variation,
+            wave_depth_intensity=wave_depth_intensity,
             seed=seed,
         )
     elif style == "tsp":
@@ -1929,6 +1954,11 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
                 "wave_period_variation",
                 None,
             )
+            row_depth_intensity = getattr(
+                points,
+                "wave_depth_intensity",
+                None,
+            )
             row_attribute = (
                 f' data-wave-row="{int(row_index)}"'
                 if row_index is not None
@@ -1956,10 +1986,17 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
                 if row_period_variation is not None
                 else ""
             )
+            depth_intensity_attribute = (
+                " data-wave-depth-intensity="
+                f'"{float(row_depth_intensity):.6f}"'
+                if row_depth_intensity is not None
+                else ""
+            )
             body.append(
                 f"<polyline{row_attribute}{baseline_attribute}"
                 f"{policy_attribute}{period_attribute}"
-                f"{period_variation_attribute} points=\"{pairs}\"/>"
+                f"{period_variation_attribute}{depth_intensity_attribute} "
+                f"points=\"{pairs}\"/>"
             )
         body.append("</g>")
     return (

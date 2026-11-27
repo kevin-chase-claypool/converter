@@ -48,8 +48,10 @@ lattice as the hard constraint and permits the visible instantaneous gaps to
 vary with row-local depth. Its base period is operator-controlled in row
 pitches, and each separated ink channel's local coverage after GCR varies both
 its period and amplitude. The four independent waveforms combine in the final
-print. Near the pen-clearance limit, only the local offsets that would collide
-are reduced; the equal row baselines and unaffected waveform remain intact.
+print. A user-selectable depth-intensity curve controls how strongly light and
+dark channel tone affect that amplitude/period drive. Near the pen-clearance
+limit, only the local offsets that would collide are reduced; the equal row
+baselines and unaffected waveform remain intact.
 Both default spacing guards keep the selected profile but apply a row-locked
 projection. The full measured field is evaluated in the effective screen
 frame, then averaged across the perpendicular row coordinate at each along-row

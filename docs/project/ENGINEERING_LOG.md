@@ -35,9 +35,17 @@
   variation. It previously consumed more than 150 seconds on one 300 mm layer
   before returning a nearly straight result. An analytic minimum-pitch gate
   now rejects it immediately, and **Match pen** returns the safe value.
+- Added **Depth intensity** (`0-300 %`, default `100 %`) to contrast-curve
+  each ink's tonal drive before it changes amplitude and period. This allows
+  much stronger separation between extreme light and dark portions without
+  changing baseline pitch.
+- Fixed the sidebar-width regression by moving the long effective-pitch
+  explanation into its own wrapped row and preventing the row-status label
+  from contributing its text width. Numeric spin buttons remain usable at the
+  normal panel width.
 - The focused CMYK, Xθ/Yθ, final-coordinate, coupon, and contour suites pass
-  `157` tests.
-- Complete converter discovery passes `670` tests with one expected
+  `160` tests.
+- Complete converter discovery passes `673` tests with one expected
   OpenGL-context skip.
 - Evidence: `WSW-20261126-014`;
   `docs/changes/windows-software/2026/2026-11-26-fixed-baseline-clearance-wavelength.md`.

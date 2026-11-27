@@ -680,7 +680,10 @@ Current tools:
   contract, and Save is blocked before planning. A deliberately unsafe
   comparison run requires the explicit **Allow nonuniform Wave diagnostic
   output** checkbox; that permission is not persisted in the image recipe and
-  turns the status amber.
+  turns the status amber. The effective-pitch explanation occupies its own
+  wrapped row, and the status label ignores its long text when calculating the
+  sidebar width, so the numeric spin buttons remain usable without expanding
+  the panel horizontally.
   Motion preflight checks the bed-step cap, the A-rate limit, bare `G0`
   rotations, moves that exceed the Path tolerance, and the final path plus
   pen-radius envelope against the configured reach. Hard violations block Save
@@ -730,6 +733,10 @@ Current tools:
   moves that waveform depth from CMY coverage into black. The final scaled
   path is checked again before planning. This mode is stored as `waves_fixed`;
   existing `waves_even` recipes keep their separate exact-spacing geometry.
+  **Depth intensity** applies a centered contrast curve to each channel's tone
+  before it drives both period and amplitude. `100 %` preserves the normal
+  tonal drive, lower values soften the difference between light and dark, and
+  higher values separate extreme highlights and shadows more aggressively.
   Imported-outline pen-width shrink is disabled for this self-screened mode so
   it cannot narrow the configured physical row clearance. Save preflight warns
   when clearance forces enough local damping to limit the requested period

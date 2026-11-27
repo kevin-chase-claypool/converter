@@ -597,6 +597,8 @@ Acceptance:
 - The **Wave period** control visibly changes the base cycle width, while
   **Period variation** makes dark channel portions shorter and row amplitudes
   deeper, with light portions longer and flatter within the same patch.
+- **Depth intensity** visibly increases the light-versus-dark amplitude and
+  period contrast without moving any row baseline.
 - Each ink uses its own post-GCR channel density. Changing GCR moves waveform
   depth between black and CMY rather than keeping all four colors on one
   common waveform.
