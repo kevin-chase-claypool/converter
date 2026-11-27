@@ -123,8 +123,8 @@ scale even though the emitted rows were uniform to `0.00445 mm`.
   `2.129 mm` baseline pitch and `1.7595x` fit scale.
 - `test_cmyk_wave_coupon.py` verifies the new one-file coupon contains both
   XY-only and Xθ/Yθ motion and passes the strict motion guard.
-- The checked-in coupon passes `check_gcode_motion.py --strict`: 3,649 drawing
-  moves, maximum drawing-bed step `1.77 deg`, peak A rate
+- The checked-in coupon passes `check_gcode_motion.py --strict`: 3,665 drawing
+  moves, maximum drawing-bed step `1.72 deg`, peak A rate
   `500 motor deg/s`, no rotated pen-up `G0`, and worst bounded bed path bow
   `0.015 mm`.
 - Complete converter discovery passes `662` tests with one expected

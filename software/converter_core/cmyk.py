@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
+
 from .cancellation import check_cancelled
 from .geometry import WaveTrail, retag_contour
 from .shading import (
@@ -62,7 +64,7 @@ WAVE_FIXED_FREQUENCY_TONE_GAIN = 0.32
 DEFAULT_WAVE_PERIOD_PITCHES = 2.0
 DEFAULT_WAVE_PERIOD_VARIATION = 0.35
 WAVE_CLEARANCE_SAFETY_MARGIN_MM = 0.02
-WAVE_PERIOD_CLEARANCE_SAFETY_FACTOR = 1.10
+WAVE_NESTED_PITCH_SAFETY_FACTOR = 1.05
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
@@ -70,32 +72,13 @@ DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
 
 def fixed_wave_minimum_pitch_mm(
     clearance_mm,
-    period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
-    period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
-    frequency_variation=0.0,
-    amplitude_scale=1.0,
+    **_options,
 ):
-    """Minimum effective row pitch for a safe fixed-baseline waveform."""
+    """Minimum effective pitch for nested fixed-baseline Wave rows."""
     clearance = max(0.0, float(clearance_mm))
-    period = max(0.5, float(period_pitches))
-    maximum_frequency = (
-        1.0
-        + max(0.0, float(period_variation)) * 0.5
-        + max(0.0, float(frequency_variation))
-    )
-    maximum_slope = (
-        0.5
-        * max(0.1, float(amplitude_scale))
-        * 2.0
-        * math.pi
-        / period
-        * maximum_frequency
-    )
     return (
-        clearance
-        * math.sqrt(1.0 + maximum_slope * maximum_slope)
-        * WAVE_PERIOD_CLEARANCE_SAFETY_FACTOR
-    )
+        clearance + WAVE_CLEARANCE_SAFETY_MARGIN_MM
+    ) * WAVE_NESTED_PITCH_SAFETY_FACTOR
 
 
 class InkTrail(list):
@@ -809,6 +792,118 @@ def _polyline_pair_is_clear(first_segments, second_segments, minimum):
     """Check two x-monotone polylines using a linear segment sweep."""
     if not first_segments or not second_segments:
         return True
+    if len(first_segments) * len(second_segments) >= 256:
+        first = np.asarray(
+            first_segments,
+            dtype=np.float64,
+        ).reshape(-1, 4)
+        second = np.asarray(
+            second_segments,
+            dtype=np.float64,
+        ).reshape(-1, 4)
+        first_min_x = np.minimum(first[:, 0], first[:, 2])
+        first_max_x = np.maximum(first[:, 0], first[:, 2])
+        second_min_x = np.minimum(second[:, 0], second[:, 2])
+        second_max_x = np.maximum(second[:, 0], second[:, 2])
+        overlapping = (
+            (second_min_x[None, :] <= first_max_x[:, None] + minimum)
+            & (second_max_x[None, :] >= first_min_x[:, None] - minimum)
+        )
+        first_index, second_index = np.nonzero(overlapping)
+        if not len(first_index):
+            return True
+        first = first[first_index]
+        second = second[second_index]
+        first_x = first[:, 2] - first[:, 0]
+        first_y = first[:, 3] - first[:, 1]
+        second_x = second[:, 2] - second[:, 0]
+        second_y = second[:, 3] - second[:, 1]
+        denominator = first_x * second_y - first_y * second_x
+        delta_x = second[:, 0] - first[:, 0]
+        delta_y = second[:, 1] - first[:, 1]
+        nonzero = np.abs(denominator) > 1e-12
+        first_fraction = np.divide(
+            delta_x * second_y - delta_y * second_x,
+            denominator,
+            out=np.full_like(denominator, -1.0),
+            where=nonzero,
+        )
+        second_fraction = np.divide(
+            delta_x * first_y - delta_y * first_x,
+            denominator,
+            out=np.full_like(denominator, -1.0),
+            where=nonzero,
+        )
+        if np.any(
+            nonzero
+            & (first_fraction >= 0.0)
+            & (first_fraction <= 1.0)
+            & (second_fraction >= 0.0)
+            & (second_fraction <= 1.0)
+        ):
+            return False
+
+        def point_segment_distance(
+            point_x,
+            point_y,
+            start_x,
+            start_y,
+            end_x,
+            end_y,
+        ):
+            vector_x = end_x - start_x
+            vector_y = end_y - start_y
+            length_sq = vector_x * vector_x + vector_y * vector_y
+            projection = np.divide(
+                (point_x - start_x) * vector_x
+                + (point_y - start_y) * vector_y,
+                length_sq,
+                out=np.zeros_like(length_sq),
+                where=length_sq > 1e-18,
+            )
+            projection = np.clip(projection, 0.0, 1.0)
+            return np.hypot(
+                point_x - (start_x + projection * vector_x),
+                point_y - (start_y + projection * vector_y),
+            )
+
+        distances = np.minimum.reduce(
+            (
+                point_segment_distance(
+                    first[:, 0],
+                    first[:, 1],
+                    second[:, 0],
+                    second[:, 1],
+                    second[:, 2],
+                    second[:, 3],
+                ),
+                point_segment_distance(
+                    first[:, 2],
+                    first[:, 3],
+                    second[:, 0],
+                    second[:, 1],
+                    second[:, 2],
+                    second[:, 3],
+                ),
+                point_segment_distance(
+                    second[:, 0],
+                    second[:, 1],
+                    first[:, 0],
+                    first[:, 1],
+                    first[:, 2],
+                    first[:, 3],
+                ),
+                point_segment_distance(
+                    second[:, 2],
+                    second[:, 3],
+                    first[:, 0],
+                    first[:, 1],
+                    first[:, 2],
+                    first[:, 3],
+                ),
+            )
+        )
+        return bool(np.all(distances >= minimum - 1e-9))
     second_index = 0
     for first_a, first_b in first_segments:
         first_min_x = min(first_a[0], first_b[0])
@@ -1079,7 +1174,7 @@ def _wave_rows(
                 "edge gap."
             )
         required_pitch = fixed_wave_minimum_pitch_mm(
-            clearance_target,
+            clearance,
             period_pitches=wave_period_pitches,
             period_variation=wave_period_variation,
             frequency_variation=wave_frequency_variation,
@@ -1126,41 +1221,24 @@ def _wave_rows(
                 )
             )
 
-        row_phases = []
-        for row_index, row_tone in enumerate(smoothed_tone):
-            mean_tone = sum(row_tone) / max(len(row_tone), 1)
-            phase_offset = (
-                common_phase_offset
-                + min(1.0, period_variation)
-                * 2.0
-                * math.pi
-                * (
-                    (
-                        row_index * 0.4142135623730950
-                        + mean_tone * 0.27
-                    )
-                    % 1.0
-                )
+        nested_phases = [common_phase_offset]
+        for x_index in range(1, len(x_values)):
+            delta_x = x_values[x_index] - x_values[x_index - 1]
+            common_variation = common_frequency_variation(
+                x_index,
+                common_phase_offset,
             )
-            phases = [phase_offset]
-            for x_index in range(1, len(x_values)):
-                delta_x = x_values[x_index] - x_values[x_index - 1]
-                tone = row_tone[x_index]
-                common_variation = common_frequency_variation(
-                    x_index,
-                    phase_offset,
-                )
-                frequency_scale = max(
-                    0.5,
-                    1.0
-                    + common_variation
-                    + period_variation
-                    * (tone - 0.5),
-                )
-                phases.append(
-                    phases[-1] + radians_per_mm * frequency_scale * delta_x
-                )
-            row_phases.append(phases)
+            frequency_scale = max(
+                0.5,
+                1.0
+                + common_variation
+                + period_variation
+                * (shared_tone[x_index] - 0.5),
+            )
+            nested_phases.append(
+                nested_phases[-1]
+                + radians_per_mm * frequency_scale * delta_x
+            )
 
         local_scales = [
             [1.0] * len(x_values)
@@ -1171,7 +1249,7 @@ def _wave_rows(
                 (
                     amplitude_max
                     * smoothed_tone[row_index][x_index]
-                    * math.sin(row_phases[row_index][x_index])
+                    * math.sin(nested_phases[x_index])
                     if tone_rows[row_index][x_index] >= INK_FLOOR
                     else None
                 )
@@ -1675,7 +1753,7 @@ def screen_channel(
         else:
             fixed_clearance = max(0.0, float(row_clearance_mm))
         required_pitch = fixed_wave_minimum_pitch_mm(
-            fixed_clearance + WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+            fixed_clearance,
             period_pitches=wave_period_pitches,
             period_variation=wave_period_variation,
             frequency_variation=wave_frequency_variation,

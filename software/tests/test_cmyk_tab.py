@@ -1793,7 +1793,9 @@ class ScreeningTests(unittest.TestCase):
             all(abs(gap - spacing) < 1e-9 for gap in gaps)
         )
 
-    def test_fixed_baseline_wave_depth_drives_row_amplitude_and_frequency(self):
+    def test_fixed_baseline_depth_drives_row_amplitude_with_nested_phase(
+        self,
+    ):
         spacing = 4.0
         size = 128
         tone = self.np.ones((size, size), dtype="float32")
@@ -1841,10 +1843,11 @@ class ScreeningTests(unittest.TestCase):
             light_amplitude * 2.0,
             "scene depth must create visibly different row amplitudes",
         )
-        self.assertGreater(
-            max(map(crossings, dark_rows)),
-            min(map(crossings, light_rows)),
-            "local depth must also vary the row winding rate",
+        self.assertLessEqual(
+            max(map(crossings, dark_rows))
+            - min(map(crossings, light_rows)),
+            1,
+            "nested rows must share the same phase carrier",
         )
 
     def test_fixed_baseline_rejects_period_that_cannot_fit_clearance(self):
@@ -1944,7 +1947,61 @@ class ScreeningTests(unittest.TestCase):
             "smaller Wave period must produce more visible cycles",
         )
 
-    def test_fixed_baseline_period_varies_with_row_depth(self):
+    def test_fixed_baseline_period_follows_local_channel_depth(self):
+        size = 512
+        tone = self.np.ones((size, size), dtype="float32")
+        _yy, xx = self.np.mgrid[0:size, 0:size]
+        depth = (0.12 + 0.80 * xx / (size - 1)).astype("float32")
+        rows = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 128.0,
+                "height_mm": 64.0,
+                "pixels_w": size,
+                "pixels_h": size,
+            },
+            style="waves_fixed",
+            spacing_mm=3.36,
+            pen_diameter_mm=0.8,
+            row_clearance_mm=1.05,
+            depth_tone=depth,
+            seed=7,
+            wave_period_pitches=1.0,
+            wave_period_variation=0.60,
+        )
+        row = max(rows, key=len)
+        baseline = row.wave_baseline_mm[1]
+        signs = [
+            (x_value, 1 if y_value >= baseline else -1)
+            for x_value, y_value in row
+        ]
+        crossings = [
+            (first[0] + second[0]) / 2.0
+            for first, second in zip(signs, signs[1:])
+            if first[1] != second[1]
+        ]
+        midpoint = (
+            min(x for x, _y in row)
+            + max(x for x, _y in row)
+        ) / 2.0
+        light_crossings = sum(
+            x_value < midpoint for x_value in crossings
+        )
+        dark_crossings = sum(
+            x_value >= midpoint for x_value in crossings
+        )
+        self.assertGreater(
+            dark_crossings,
+            light_crossings + 2,
+            "darker channel columns must use a shorter period",
+        )
+
+    def test_fixed_baseline_wave_rows_nest_at_moderate_pitch(self):
+        import converter_core.cmyk as cmyk_core
+
+        spacing = 1.87
         size = 128
         tone = self.np.ones((size, size), dtype="float32")
         yy, _xx = self.np.mgrid[0:size, 0:size]
@@ -1960,38 +2017,46 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": size,
             },
             style="waves_fixed",
-            spacing_mm=3.36,
-            pen_diameter_mm=0.8,
-            row_clearance_mm=1.05,
+            spacing_mm=spacing,
+            pen_diameter_mm=0.90,
+            row_clearance_mm=1.15,
             depth_tone=depth,
             seed=7,
             wave_period_pitches=2.0,
-            wave_period_variation=0.60,
+            wave_period_variation=converter.DEFAULT_WAVE_PERIOD_VARIATION,
         )
         rows = sorted(
             (row for row in rows if len(row) > 100),
             key=lambda row: row.wave_row_index,
         )
-
-        def crossings(row):
-            baseline = row.wave_baseline_mm[1]
-            signs = [
-                1 if y_value >= baseline else -1
-                for _x, y_value in row
-            ]
-            return sum(
-                first != second
-                for first, second in zip(signs, signs[1:])
+        self.assertGreaterEqual(len(rows), 20)
+        baselines = [
+            row.wave_baseline_mm[1]
+            for row in rows
+        ]
+        self.assertTrue(
+            all(
+                abs(second - first - spacing) < 1e-9
+                for first, second in zip(baselines, baselines[1:])
             )
-
-        quarter = max(1, len(rows) // 4)
-        light = sorted(crossings(row) for row in rows[:quarter])
-        dark = sorted(crossings(row) for row in rows[-quarter:])
-        self.assertGreater(
-            dark[len(dark) // 2],
-            light[len(light) // 2] + 2,
-            "darker image rows must use a shorter period than lighter rows",
         )
+        ranges = [
+            max(y for _x, y in row) - min(y for _x, y in row)
+            for row in rows
+        ]
+        self.assertGreater(
+            ranges[-1],
+            ranges[0] * 2.0,
+            "dark and light rows must retain different wave amplitude",
+        )
+        for first, second in zip(rows, rows[1:]):
+            self.assertTrue(
+                cmyk_core._polyline_pair_is_clear(
+                    cmyk_core._polyline_segments(first),
+                    cmyk_core._polyline_segments(second),
+                    1.15,
+                )
+            )
 
     def test_fixed_baseline_wave_clearance_scales_at_all_angles_and_pitches(
         self,
@@ -2818,7 +2883,7 @@ class CmykTabTests(unittest.TestCase):
             tab.row_pitch_status.text().lower(),
         )
         suggested = tab.pen_pitch_mm()
-        self.assertGreater(suggested, 2.0)
+        self.assertGreater(suggested * 1.1, 1.2)
 
         tab.match_pen_pitch()
 

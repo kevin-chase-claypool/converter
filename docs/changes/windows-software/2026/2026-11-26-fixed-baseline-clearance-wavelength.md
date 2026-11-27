@@ -94,12 +94,12 @@ period and local-only safety correction.
 
 - The period-control regression fails with the old API and now confirms that
   `1.5 x pitch` produces materially more cycles than `3.0 x pitch`.
-- A dark-to-light depth regression confirms dark rows use a shorter period
-  than light rows.
-- At the screenshot geometry, the old build produced identical crossing
-  counts for light and dark rows. The corrected build produces about `42-48`
-  light-row crossings versus `60-65` dark-row crossings, while retaining
-  fixed `1.21 mm` baselines and the required pen clearance.
+- A dark-to-light spatial-depth regression confirms dark channel portions use
+  a shorter period than light portions.
+- Rows within one ink share a nested phase carrier while retaining independent
+  amplitude from their local channel density. The moderate-pitch regression
+  confirms fixed `1.87 mm` baselines, larger dark-row amplitude, and exact
+  adjacent-row clearance.
 - The fixed-baseline SVG test verifies that period and variation metadata
   survive serialization and artwork scaling.
 - The real-pipeline Save regression verifies that period controls round-trip,
@@ -109,9 +109,9 @@ period and local-only safety correction.
   black.
 - The impossible screenshot configuration fails in under `0.5 s` before any
   row pass. A 300 mm layer at a safe pitch completes in about `1.8 s`.
-- The focused CMYK, Xθ/Yθ, checker, coupon, and contour suites pass `156`
+- The focused CMYK, Xθ/Yθ, checker, coupon, and contour suites pass `157`
   tests.
-- Complete converter discovery passes `669` tests with one expected OpenGL
+- Complete converter discovery passes `670` tests with one expected OpenGL
   context skip.
 
 ## Struggles and rejected approaches
@@ -122,8 +122,10 @@ period and local-only safety correction.
   straight.
 - Scaling both rows whenever any part approached flattened the complete row,
   including regions that had ample local clearance.
-- Permanently sharing the carrier across rows preserved spacing but removed
-  the requested dark-versus-light frequency depth.
+- Giving every row an independent phase distorted the intended college-ruled
+  lattice and forced the large pitch gate. The selected nested construction
+  keeps one channel-level carrier while allowing amplitude and channel depth
+  to vary.
 
 ## Risks and follow-up
 

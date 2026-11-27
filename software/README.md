@@ -451,7 +451,8 @@ Cycle Start with the pen loaded:
   XY-only and Xθ/Yθ at `3.36 mm` and `4.20 mm` paper pitch on a 0-degree
   screen. Every patch uses row-lock bed compensation, a `0.8 mm` pen, `F700`,
   and distinct row-local depth. Inspect the row bases for equal pitch, the
-  waves for row-specific amplitude/frequency, and the gaps for no contact.
+  waves for channel-specific period and row-specific amplitude, and the gaps
+  for no contact.
   Regenerate with
   `python tools\make_cmyk_wave_coupon.py --fixed-baseline`.
 - `..\samples\gcode\bed-compensation-motion-test.gcode` - one-run
@@ -749,9 +750,10 @@ Current tools:
   common carrier frequency by up to `18 %`, using two non-matching modulation
   periods, so crests and troughs do not repeat as fixed vertical bands while
   the phase and vertical offset remain common. For fixed baselines the same
-  image-wide modulation is combined with row-local tone, so darker rows wind
-  faster without moving their baselines. Unchecking it leaves a constant base
-  frequency but does not remove the fixed-baseline mode's row-local phase.
+  image-wide modulation is combined with that ink channel's local depth, so
+  darker image portions wind faster without moving any baseline. Row
+  amplitudes remain independent within the nested phase carrier. Unchecking it
+  leaves a constant base frequency but does not remove tonal period variation.
   The selected **Row order** is saved in the set manifest and applies
   independently of the carrier-frequency choice.
   **Preserve exact row pitch** changes to **Preserve fixed row baselines** for
@@ -811,8 +813,9 @@ Current tools:
   Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four CMYK
   screen angles for both production modes. At zero depth the fixed-baseline
   mode collapses every row to its straight equal baseline; at nonzero depth
-  it produces row-specific amplitude and frequency while retaining the final
-  pen clearance. Legacy stored values `waves` and `waves_zero` are promoted
+  it nests a shared phase carrier with row-specific amplitude and
+  channel-specific period variation while retaining the final pen clearance.
+  Legacy stored values `waves` and `waves_zero` are promoted
   to equidistant geometry unless a diagnostic tool explicitly requests
   `allow_variable_wave_spacing=True`; the explicitly labeled legacy diagnostic
   uses this path. **Path tolerance** controls how densely each sine is

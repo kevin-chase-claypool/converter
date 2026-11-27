@@ -595,8 +595,8 @@ Acceptance:
 - Visible gaps vary by design and correlate with image depth; they are not
   evaluated as a demand for constant instantaneous pitch.
 - The **Wave period** control visibly changes the base cycle width, while
-  **Period variation** makes dark rows shorter/deeper and light rows
-  longer/flatter within the same patch.
+  **Period variation** makes dark channel portions shorter and row amplitudes
+  deeper, with light portions longer and flatter within the same patch.
 - Each ink uses its own post-GCR channel density. Changing GCR moves waveform
   depth between black and CMY rather than keeping all four colors on one
   common waveform.
