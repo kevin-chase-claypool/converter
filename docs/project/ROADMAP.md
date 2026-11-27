@@ -633,6 +633,15 @@ task rather than treated as the active production path.
   accepted for the explicitly corrected edge-response model, not as a claim
   that all composite-fidelity gates now pass. Physical print evidence remains
   required.
+  Status 2026-11-27 visible live-pitch wave: `WSW-20261127-010` fixes the
+  owner-observed near-straight saved recipe. At `1.265 mm` final pitch, `8 x`
+  period, and `150 %` depth intensity, median row peak-to-peak rises from
+  `0.144 mm` to `0.485 mm`. Strong contrast cells retain alternating rows
+  locally so the final pen-plus-edge check does not globally flatten the
+  waveform. The saved-sidecar worst-region amplitude is `0.576 mm`, clearing
+  the `0.50 mm` wave gate. Color/luminance/structure/coverage gates, physical
+  ink spread, and registration remain open; the local density tradeoff is
+  explicit.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

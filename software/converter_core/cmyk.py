@@ -1082,8 +1082,8 @@ def screen_channel(
     (identical translated wave rows with exact instantaneous spacing),
     ``waves_fixed`` (equal row baselines with tone-driven per-row amplitude,
     phase, and phase rate), ``waves_fidelity`` (the same fixed baselines plus
-    deterministic per-ink row-density gating and immediate shared-luminance
-    contrast spikes), ``waves_zero`` (shared phase with tone-driven row
+    deterministic per-ink row-density gating and immediate per-row
+    scene-luminance contrast spikes), ``waves_zero`` (shared phase with tone-driven row
     amplitude, variable spacing, and exact clearance; legacy diagnostic use
     only), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
@@ -1104,7 +1104,9 @@ def screen_channel(
     signal before it drives period and amplitude. In ``waves_fixed`` the
     signal is each ink's locally smoothed depth. In ``waves_fidelity``,
     absolute smoothed ink coverage controls row density while immediate
-    adjacent scene-luminance contrast controls amplitude; `100 %` is neutral.
+    adjacent scene-luminance contrast controls each row's amplitude; strong
+    contrast cells retain alternating rows so the waveform can use the
+    available height. `100 %` is neutral.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal

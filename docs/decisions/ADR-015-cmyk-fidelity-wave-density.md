@@ -46,6 +46,10 @@ separates absolute ink quantity from immediate image contrast:
   A small dead band suppresses compression or paper-texture noise.
 - Absolute per-ink coverage still controls row density. It is not reused as
   the fidelity amplitude signal.
+- Coarse cells whose adjacent scene contrast is at least `38 %` retain
+  alternating rows across that cell and its immediate neighbours. This local
+  row thinning gives a sharp amplitude spike enough physical room that the
+  pen-plus-edge envelope does not globally flatten the complete image.
 - All emitted rows keep the shared phase carrier and slope-aware amplitude
   envelope.
 - The final shortest-segment pen-plus-edge clearance check remains
@@ -68,6 +72,10 @@ all emitted baselines remain on the declared uniform grid.
 - Edge contrast and broad tone now have separate representation. A uniform
   dark field is flat at the waveform level and depends on row density for its
   ink quantity; a strong edge receives a local amplitude spike.
+- Strong edges use roughly half the candidate rows in their local contrast
+  cells. This is a deliberate coverage/definition tradeoff: it buys visible
+  wave height at the live `1.265 mm` pitch, where retaining every adjacent row
+  leaves only `0.095 mm` nominal row-gap headroom.
 - Tone-density row gaps increase M3/M5 fragmentation relative to a continuous
   row when light regions alternate. The exact program cost must be measured
   for the selected source and pitch.
@@ -82,12 +90,15 @@ all emitted baselines remain on the declared uniform grid.
   variation, depth sensitivity, and G-code row evidence.
 - Focused fidelity geometry tests verify density selection, fixed-grid
   baselines, shared phase, all four screen angles, shortest-segment clearance,
-  flat uniform tone, monotone contrast-spike height, and one-pixel edge
-  preservation.
+  flat uniform tone, monotone contrast-spike height, one-pixel edge
+  preservation, and a live-pitch edge above `0.45 mm` median peak-to-peak.
 - A real four-ink save passes the final baseline/clearance checker.
+- At the saved live recipe, median row peak-to-peak rises from `0.144 mm` to
+  `0.485 mm`; the sidecar oracle's worst sampled region rises to `0.576 mm`
+  and now clears its `0.50 mm` amplitude gate.
 - The live failed recipe remains a red fidelity baseline; the fidelity mode
-  improves structure, edge, luminance, coverage bias, and Wave persistence,
-  while remaining color/density limits are reported rather than hidden.
+  clears the Wave-persistence/amplitude checks, while color, coverage, and
+  structure limits are reported rather than hidden.
 
 ## Related records
 

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-27 | `WSW-20261127-010` | implemented | [Make live-pitch contrast waves visibly wavy](2026/2026-11-27-visible-live-pitch-wave-contrast.md) | `cmyk`, `wave-screen`, `fidelity`, `live-pitch`, `contrast`, `row-thinning`, `clearance`, `visible-wave` |
 | 2026-11-27 | `WSW-20261127-009` | implemented | [Make fidelity Wave amplitude follow immediate local contrast](2026/2026-11-27-wave-fidelity-contrast-spikes.md) | `cmyk`, `wave-screen`, `fidelity`, `local-contrast`, `edge-spike`, `source-pixel-sampling`, `clearance` |
 | 2026-11-27 | `WSW-20261127-008` | implemented | [Add coarse 2-D tone cells to Wave fidelity](2026/2026-11-27-wave-fidelity-coarse-cell-dither.md) | `cmyk`, `wave-screen`, `fidelity`, `tone-density`, `ordered-dither`, `fragmentation`, `clearance` |
 | 2026-11-27 | `WSW-20261127-007` | implemented | [Preserve transparent source colour and match CMYK to the composite](2026/2026-11-27-cmyk-alpha-and-process-color.md) | `cmyk`, `color-management`, `alpha`, `process-ink`, `multiply-composite`, `fidelity`, `ink-profile` |

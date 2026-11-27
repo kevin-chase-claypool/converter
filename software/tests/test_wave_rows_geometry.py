@@ -376,6 +376,38 @@ class FidelityDensityTests(unittest.TestCase):
             "a one-source-pixel line must still produce a contrast spike",
         )
 
+    def test_live_recipe_edge_is_visibly_wavy(self):
+        size = 128
+        geometry_value = geometry(64.0, 64.0, size)
+        tone = np.full((size, size), 0.55, dtype=np.float32)
+        tone[:, size // 2 : size // 2 + 2] = 1.0
+
+        rows = row_residual(
+            screen(
+                tone,
+                geometry_value,
+                spacing_mm=1.265,
+                pen_mm=0.9,
+                period=8.0,
+                period_variation=1.0,
+                depth_intensity=1.5,
+                angle_deg=15.0,
+                style="waves_fidelity",
+            )
+        )
+        peaks = []
+        for _index, along, residual in rows:
+            if len(along) >= 8:
+                peaks.append(float(np.ptp(residual)))
+
+        self.assertTrue(peaks, "expected live-recipe rows crossing the edge")
+        self.assertGreater(
+            float(np.median(peaks)),
+            0.45,
+            "the saved live recipe must render a visibly wavy edge rather "
+            "than a nearly straight carrier",
+        )
+
     def test_density_tracks_tone_and_skips_light_rows(self):
         size = 80
         tone = np.full((size, size), 0.15, dtype=np.float32)

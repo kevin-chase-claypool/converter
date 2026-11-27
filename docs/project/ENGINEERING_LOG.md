@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261127-visible-live-pitch-wave-contrast"></a>
+### dYY" 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Make live-pitch contrast waves visibly wavy
+
+- The owner reported that the saved `waves_fidelity` recipe still produced
+  almost straight rows. The exact live-pitch synthetic edge measured only
+  `0.144 mm` median peak-to-peak, matching the screenshot.
+- Root cause: keeping every adjacent row at `1.265 mm` pitch left only
+  `0.095 mm` nominal clearance headroom. The abrupt contrast flank made the
+  perpendicular row distance smaller, and the global fallback reduced most
+  rows to roughly one-fifth amplitude.
+- Strong-contrast cells now retain alternating rows locally across a
+  three-cell band. The waveform keeps per-row adjacent scene contrast while
+  the local extra row gap prevents global flattening.
+- The exact live-pitch regression now measures `0.485 mm` median
+  peak-to-peak. The saved-sidecar oracle worst-region amplitude is `0.576 mm`,
+  clearing its `0.50 mm` gate.
+- Rejected attempts: larger contrast gain alone, local bridge only
+  (`0.282 mm`), all-row no-clearance output (`~0.88 mm` but illegal), and
+  broad flank smoothing.
+- Wave geometry `19 / 19`, focused CMYK verification `217`, and complete
+  converter discovery `744` tests pass with one expected OpenGL-context skip.
+  Color/luminance/structure/coverage gates remain red because strong edges
+  intentionally lose local row density.
+- Evidence: `WSW-20261127-010`, ADR-015, and
+  `docs/changes/windows-software/2026/2026-11-27-visible-live-pitch-wave-contrast.md`.
+- Category: windows-software, cmyk, wave-screen, fidelity, live-pitch,
+  local-contrast, row-thinning, clearance.
+
 <a id="elog-20261127-wave-fidelity-contrast-spikes"></a>
 ### dYY" 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Make fidelity Wave amplitude follow immediate contrast
 

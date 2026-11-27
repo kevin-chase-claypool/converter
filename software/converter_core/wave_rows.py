@@ -63,6 +63,9 @@ WAVE_FIDELITY_BRIDGE_MIN_COVERAGE = 0.65
 # introducing a nonzero amplitude floor: uniform tone remains a straight line.
 WAVE_FIDELITY_CONTRAST_GAIN = 4.0
 WAVE_FIDELITY_CONTRAST_EDGE_THRESHOLD = 0.025
+WAVE_FIDELITY_CONTRAST_CONTINUITY_THRESHOLD = 0.38
+WAVE_FIDELITY_CLEARANCE_BOUNDARY_TRIM_SEGMENTS = 3
+WAVE_FIDELITY_CARRIER_SCALE = 1.08
 # Fixed-baseline crest height as a fraction of the carrier wavelength. A
 # quarter wavelength at full tone is clearly wavy; the old constant half-pitch
 # amplitude became near-invisible once operators lengthened the Wave period.
@@ -150,6 +153,26 @@ def _polyline_segments(points):
         for first, second in zip(points, points[1:])
         if first is not None and second is not None
     ]
+
+
+def _interior_run_segments(row, trim_segments=1):
+    """Return segments without each contiguous run's boundary chords."""
+    trim_segments = max(0, int(trim_segments))
+    result = []
+    current = []
+    for point in list(row) + [None]:
+        if point is not None:
+            current.append(point)
+            continue
+        if len(current) >= 2:
+            segments = _polyline_segments(current)
+            if trim_segments:
+                segments = segments[
+                    trim_segments : len(segments) - trim_segments
+                ]
+            result.extend(segments)
+        current = []
+    return result
 
 
 def _polyline_pair_is_clear(first_segments, second_segments, minimum):
@@ -301,16 +324,26 @@ def _wave_clearance_ok(
     positions,
     spacing,
     minimum_clearance_mm=0.0,
+    trim_endpoints=False,
 ):
     """Check the shortest distance between adjacent visible row segments."""
     minimum_clearance = max(0.0, float(minimum_clearance_mm))
     if minimum_clearance:
         visible_rows = [
-            segments
+            (
+                _interior_run_segments(
+                    row,
+                    WAVE_FIDELITY_CLEARANCE_BOUNDARY_TRIM_SEGMENTS,
+                )
+                if trim_endpoints and len(segments) > 2
+                else segments
+            )
             for row in positions
             if (segments := _polyline_segments(row))
         ]
         for first_row, second_row in zip(visible_rows, visible_rows[1:]):
+            if not first_row or not second_row:
+                continue
             if not _polyline_pair_is_clear(
                 first_row,
                 second_row,
@@ -318,6 +351,46 @@ def _wave_clearance_ok(
             ):
                 return False
     return True
+
+
+def _wave_clearance_conflict_rows(
+    positions,
+    minimum_clearance_mm=0.0,
+    trim_endpoints=False,
+):
+    """Return rows participating in the first failed adjacent-row clearances."""
+    minimum_clearance = max(0.0, float(minimum_clearance_mm))
+    if minimum_clearance <= 0.0:
+        return set()
+    visible_rows = [
+        (
+            row_index,
+            (
+                _interior_run_segments(
+                    row,
+                    WAVE_FIDELITY_CLEARANCE_BOUNDARY_TRIM_SEGMENTS,
+                )
+                if trim_endpoints and len(segments) > 2
+                else segments
+            ),
+        )
+        for row_index, row in enumerate(positions)
+        if (segments := _polyline_segments(row))
+    ]
+    conflicts = set()
+    for (first_index, first), (second_index, second) in zip(
+        visible_rows,
+        visible_rows[1:],
+    ):
+        if not first or not second:
+            continue
+        if not _polyline_pair_is_clear(
+            first,
+            second,
+            minimum_clearance,
+        ):
+            conflicts.update((first_index, second_index))
+    return conflicts
 
 
 def _smooth_tone_row(values, radius):
@@ -1033,6 +1106,31 @@ def _wave_rows(
         )
         cell_indexes = [int((x - min_x) / cell_width) for x in x_values]
         cell_count = max(cell_indexes, default=-1) + 1
+        contrast_rows_by_cell = {}
+        for row_index, row in enumerate(contrast_rows or []):
+            for value_index, cell_index in enumerate(cell_indexes):
+                contrast_rows_by_cell.setdefault(cell_index, {}).setdefault(
+                    row_index,
+                    [],
+                ).append(row[value_index])
+        contrast_cells = {}
+        for cell_index, row_samples in contrast_rows_by_cell.items():
+            high_rows = [
+                row_index
+                for row_index, samples in row_samples.items()
+                if max(samples, default=0.0)
+                >= WAVE_FIDELITY_CONTRAST_CONTINUITY_THRESHOLD
+            ]
+            if not high_rows:
+                continue
+            selected_rows = list(range(0, len(row_ys), 2))
+            for candidate in (
+                cell_index - 1,
+                cell_index,
+                cell_index + 1,
+            ):
+                if 0 <= candidate < cell_count:
+                    contrast_cells[candidate] = selected_rows
         for row_index in range(len(row_ys)):
             thresholds = _ordered_density_thresholds(
                 seed,
@@ -1069,6 +1167,15 @@ def _wave_rows(
                     WAVE_FIDELITY_BRIDGE_MIN_COVERAGE * line_coverage
                 ),
             )
+            if contrast_cells:
+                for cell_index, selected_rows in contrast_cells.items():
+                    if row_index in selected_rows:
+                        visible_values[cell_index] = True
+                    elif any(
+                        abs(row_index - selected) <= 1
+                        for selected in selected_rows
+                    ):
+                        visible_values[cell_index] = False
             visible_cells = {
                 cell_index: visible_values[cell_index]
                 for cell_index in range(cell_count)
@@ -1193,7 +1300,7 @@ def _wave_rows(
             wave_amplitude,
             spacing,
             analytic_clearance,
-            available_step,
+            0.0 if fidelity_row_density else available_step,
             radians_per_mm * max_frequency_scale,
         )
         if fidelity_row_density:
@@ -1201,7 +1308,10 @@ def _wave_rows(
                 1.0,
                 max(0.0, (depth_intensity - 0.5) / 1.0),
             )
-            wave_amplitude *= fidelity_depth_gain
+            wave_amplitude *= (
+                fidelity_depth_gain
+                * WAVE_FIDELITY_CARRIER_SCALE
+            )
         depth_normalization = 1.0
         if (
             contrast_rows is None
@@ -1262,7 +1372,9 @@ def _wave_rows(
                 )
             for row_index, amplitude in enumerate(bounded_column):
                 bounded_amplitudes[row_index][x_index] = amplitude
-        def candidate_positions(scale=1.0):
+        def candidate_positions(row_scales=None):
+            if row_scales is None:
+                row_scales = [1.0] * len(row_ys)
             positions = [
                 [None] * len(x_values)
                 for _row_index in range(len(row_ys))
@@ -1272,44 +1384,90 @@ def _wave_rows(
                     if coverage_rows[row_index][x_index] < INK_FLOOR:
                         continue
                     offset = (
-                        scale
+                        row_scales[row_index]
                         * bounded_amplitudes[row_index][x_index]
                         * math.sin(nested_phases[x_index])
                     )
                     positions[row_index][x_index] = (x, y + offset)
+            if fidelity_row_density:
+                for row_index, row in enumerate(positions):
+                    run_start = None
+                    for x_index, point in enumerate(row + [None]):
+                        if point is not None:
+                            if run_start is None:
+                                run_start = x_index
+                            continue
+                        if run_start is None:
+                            continue
+                        run_end = x_index - 1
+                        max_offset = max(
+                            abs(row[index][1] - row_ys[row_index])
+                            for index in range(run_start, run_end + 1)
+                        )
+                        ramp_points = max(
+                            1,
+                            int(math.ceil(max_offset / available_step))
+                            if available_step > 1e-9
+                            else run_end - run_start + 1,
+                        )
+                        for local_index, index in enumerate(
+                            range(run_start, run_end + 1)
+                        ):
+                            distance = min(
+                                local_index,
+                                run_end - index,
+                            )
+                            if distance >= ramp_points:
+                                continue
+                            factor = distance / float(ramp_points)
+                            x_value, y_value = row[index]
+                            row[index] = (
+                                x_value,
+                                row_ys[row_index]
+                                + (y_value - row_ys[row_index]) * factor,
+                            )
+                        run_start = None
             return positions
 
-        positions = candidate_positions()
+        row_scales = [1.0] * len(row_ys)
+        positions = candidate_positions(row_scales)
+        for _step in range(16):
+            conflicts = _wave_clearance_conflict_rows(
+                positions,
+                clearance_target,
+                trim_endpoints=fidelity_row_density,
+            )
+            if not conflicts:
+                break
+            changed = False
+            for row_index in conflicts:
+                if row_scales[row_index] <= 0.01:
+                    continue
+                row_scales[row_index] *= 0.65
+                changed = True
+            if not changed:
+                break
+            positions = candidate_positions(row_scales)
         if not _wave_clearance_ok(
             positions,
             spacing,
             clearance_target,
+            trim_endpoints=fidelity_row_density,
         ):
-            flat = candidate_positions(scale=0.0)
+            flat_scales = [0.0] * len(row_ys)
+            flat = candidate_positions(flat_scales)
             if not _wave_clearance_ok(
                 flat,
                 spacing,
                 clearance_target,
+                trim_endpoints=fidelity_row_density,
             ):
                 raise ValueError(
                     "Wave screen cannot keep the fixed baseline rows apart."
                 )
-            low = 0.0
-            high = 1.0
             positions = flat
-            for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
-                scale = (low + high) * 0.5
-                candidate = candidate_positions(scale=scale)
-                if _wave_clearance_ok(
-                    candidate,
-                    spacing,
-                    clearance_target,
-                ):
-                    low = scale
-                    positions = candidate
-                else:
-                    high = scale
-        row_clearance_scales = [1.0] * len(row_ys)
+            row_scales = flat_scales
+        row_clearance_scales = row_scales
     elif zero_anchored_depth:
         clearance = max(0.0, float(minimum_clearance_mm))
         if clearance > spacing + 1e-9:

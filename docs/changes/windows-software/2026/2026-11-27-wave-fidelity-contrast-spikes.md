@@ -24,6 +24,7 @@ tags:
 related:
   - WSW-20261127-006
   - WSW-20261127-008
+  - WSW-20261127-010
   - ADR-015
 ---
 
@@ -36,6 +37,10 @@ scene-lightness contrast instead of a spatially smoothed absolute-tone field.
 Uniform areas remain flat. A narrow edge creates a narrow amplitude spike whose
 height scales with the light/dark difference. Absolute per-ink tone remains a
 separate field that controls row density.
+
+Follow-up `WSW-20261127-010` supersedes this record's shared-amplitude and
+global-fallback details. The live recipe now uses per-row contrast, local
+alternating-row thinning, and a visible live-pitch regression.
 
 ## Reason
 

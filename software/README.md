@@ -785,7 +785,7 @@ Current tools:
   check. The set manifest and spacing checker record tone-density gaps as
   intentional while still proving the underlying baseline lattice.
   Fidelity amplitude is separate from that absolute-tone density field. It is
-  an unsmoothed local contrast spike driven by shared scene-luminance
+  an unsmoothed local contrast spike driven by each row's scene-luminance
   differences within one source pixel on either side of each output sample.
   A narrow edge therefore creates a narrow waveform pulse whose height scales
   with the immediate light/dark difference, while a uniform area has zero
@@ -798,6 +798,12 @@ Current tools:
   compression or paper-texture noise, without smoothing the remaining edge.
   The smoothed absolute-tone field still controls row density and the
   scene-wide period variation.
+  Cells with at least `38 %` adjacent scene contrast retain alternating rows
+  across that cell and its immediate neighbours. At the live `1.265 mm` pitch
+  this is required to give the `0.485 mm` median waveform room inside the
+  `1.17 mm` pen-plus-edge envelope; continuing to emit every adjacent row
+  flattened the edge to `0.144 mm`. The tradeoff is lower local row density at
+  strong edges and more visible gaps.
   The fixed-baseline style `waves_fixed` retains its prior smooth depth
   response. Its **Depth intensity** applies a bounded curve to each channel's
   locally smoothed tone before it drives period and amplitude. That depth

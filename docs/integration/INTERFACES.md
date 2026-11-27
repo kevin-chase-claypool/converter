@@ -134,8 +134,11 @@ indices may have gaps but must still lie on the uniform final baseline grid.
 Its waveform amplitude is separately driven by unsmoothed immediate
 scene-luminance contrast, not by absolute channel tone. Uniform areas therefore
 remain flat, while narrow edges create narrow amplitude spikes. The manifest
-records `wave_amplitude_mode: shared_luminance_adjacent_contrast`, the contrast
-spike gain, and a zero amplitude floor.
+records `wave_amplitude_mode: row_local_luminance_adjacent_contrast`, the
+contrast spike gain, a zero amplitude floor, the fidelity carrier scale, and
+the local strong-contrast row stride. Fidelity retains alternating rows in
+strong-contrast cells so the waveform has physical clearance instead of being
+globally flattened.
 `check_cmyk_wave_spacing.py` verifies that lattice, proves visible adjacent
 segments remain outside the pen-plus-edge envelope, and treats the skipped
 rows as intentional coverage control rather than a spacing defect.

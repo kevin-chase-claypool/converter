@@ -397,8 +397,10 @@ class CmykTab(GeneratorTab):
             "row baselines but lets scene depth vary each row's waveform, so "
             "visible gaps vary by design. Fidelity adds deterministic "
             "tone-density row selection on that same baseline lattice and "
-            "uses immediate shared scene-lightness contrast for sharp "
-            "amplitude spikes. The "
+            "uses immediate scene-lightness contrast for sharp "
+            "amplitude spikes. Strong contrast cells retain alternating rows "
+            "so the spike has physical room instead of being flattened by the "
+            "pen envelope. The "
             "explicitly labeled legacy "
             "diagnostic restores the old raw-compensation comparison. Stored "
             "legacy values from older settings are promoted to an "
@@ -511,7 +513,8 @@ class CmykTab(GeneratorTab):
             "spikes while uniform areas stay flat. Absolute per-ink tone "
             "remains a separate smoothed row-density field. 100 % is neutral; "
             "lower values soften spikes and higher values make them more "
-            "decisive."
+            "decisive. Strong edges use alternating rows locally to preserve "
+            "the pen-plus-edge clearance."
         )
         screen.addRow("Depth intensity", self.wave_depth_intensity)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -2855,7 +2858,7 @@ class CmykTab(GeneratorTab):
                     self.wave_depth_intensity.value()
                 ),
                 "wave_amplitude_mode": (
-                    "shared_luminance_adjacent_contrast"
+                    "row_local_luminance_adjacent_contrast"
                     if style == "waves_fidelity"
                     else "smoothed_row_depth"
                     if style in ("waves", "waves_fixed", "waves_zero")
@@ -2870,6 +2873,19 @@ class CmykTab(GeneratorTab):
                 ),
                 "wave_amplitude_floor": (
                     0.0
+                    if style == "waves_fidelity"
+                    else None
+                ),
+                "wave_contrast_row_stride": (
+                    2 if style == "waves_fidelity" else None
+                ),
+                "wave_contrast_row_thinning_threshold": (
+                    converter.WAVE_FIDELITY_CONTRAST_CONTINUITY_THRESHOLD
+                    if style == "waves_fidelity"
+                    else None
+                ),
+                "wave_fidelity_carrier_scale": (
+                    converter.WAVE_FIDELITY_CARRIER_SCALE
                     if style == "waves_fidelity"
                     else None
                 ),

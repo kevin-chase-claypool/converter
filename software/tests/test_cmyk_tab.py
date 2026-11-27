@@ -3126,7 +3126,8 @@ class CmykTabTests(unittest.TestCase):
         self.assertIn("equally spaced", tooltip)
         self.assertIn("visible gaps vary by design", tooltip)
         self.assertIn("tone-density", tooltip)
-        self.assertIn("immediate shared scene-lightness contrast", tooltip)
+        self.assertIn("immediate scene-lightness contrast", tooltip)
+        self.assertIn("alternating rows", tooltip)
         self.assertIn("legacy diagnostic", tooltip)
 
     def test_fidelity_wave_is_a_valid_production_wave_mode(self):
@@ -4469,7 +4470,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             fidelity_data["screen"]["wave_amplitude_mode"],
-            "shared_luminance_adjacent_contrast",
+            "row_local_luminance_adjacent_contrast",
         )
         self.assertEqual(
             fidelity_data["screen"]["wave_contrast_spike_gain"],
@@ -4478,6 +4479,20 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             fidelity_data["screen"]["wave_amplitude_floor"],
             0.0,
+        )
+        self.assertEqual(
+            fidelity_data["screen"]["wave_contrast_row_stride"],
+            2,
+        )
+        self.assertEqual(
+            fidelity_data["screen"][
+                "wave_contrast_row_thinning_threshold"
+            ],
+            converter.WAVE_FIDELITY_CONTRAST_CONTINUITY_THRESHOLD,
+        )
+        self.assertEqual(
+            fidelity_data["screen"]["wave_fidelity_carrier_scale"],
+            converter.WAVE_FIDELITY_CARRIER_SCALE,
         )
 
     def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):

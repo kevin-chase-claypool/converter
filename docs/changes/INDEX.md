@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-27 | `WSW-20261127-010` | windows-software | implemented | [Make live-pitch contrast waves visibly wavy](windows-software/2026/2026-11-27-visible-live-pitch-wave-contrast.md) |
 | 2026-11-27 | `WSW-20261127-009` | windows-software | implemented | [Make fidelity Wave amplitude follow immediate local contrast](windows-software/2026/2026-11-27-wave-fidelity-contrast-spikes.md) |
 | 2026-11-27 | `WSW-20261127-008` | windows-software | implemented | [Add coarse 2-D tone cells to Wave fidelity](windows-software/2026/2026-11-27-wave-fidelity-coarse-cell-dither.md) |
 | 2026-11-27 | `WSW-20261127-007` | windows-software | implemented | [Preserve transparent source colour and match CMYK to the composite](windows-software/2026/2026-11-27-cmyk-alpha-and-process-color.md) |
