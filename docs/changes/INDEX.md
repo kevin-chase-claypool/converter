@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-014` | windows-software | implemented | [Keep visible fixed-baseline waves near pen clearance](windows-software/2026/2026-11-26-fixed-baseline-clearance-wavelength.md) |
 | 2026-11-26 | `WSW-20261126-013` | windows-software, hardware | implemented | [Add variable-depth Wave with fixed row baselines](windows-software/2026/2026-11-26-fixed-baseline-variable-depth-wave.md) |
 | 2026-11-26 | `WSW-20261126-012` | windows-software | implemented | [Block saves that do not guarantee Wave row pitch](windows-software/2026/2026-11-26-wave-row-pitch-ui-preflight.md) |
 | 2026-11-26 | `WSW-20261126-011` | windows-software | implemented | [Save CMYK defaults for the current image](windows-software/2026/2026-11-26-save-cmyk-image-defaults.md) |

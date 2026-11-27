@@ -1847,6 +1847,43 @@ class ScreeningTests(unittest.TestCase):
             "local depth must also vary the row winding rate",
         )
 
+    def test_fixed_baseline_wave_stays_visible_near_pen_clearance(self):
+        spacing = 1.21
+        size = 128
+        tone = self.np.ones((size, size), dtype="float32")
+        yy, _xx = self.np.mgrid[0:size, 0:size]
+        depth = (0.25 + 0.65 * yy / (size - 1)).astype("float32")
+        rows = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": size,
+                "pixels_h": size,
+            },
+            style="waves_fixed",
+            spacing_mm=spacing,
+            pen_diameter_mm=0.90,
+            row_clearance_mm=1.15,
+            depth_tone=depth,
+            seed=7,
+            wave_frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+        )
+        ranges = sorted(
+            max(y for _x, y in row) - min(y for _x, y in row)
+            for row in rows
+            if len(row) > 100
+        )
+        self.assertGreaterEqual(len(ranges), 20)
+        self.assertGreater(
+            ranges[len(ranges) // 2],
+            0.50,
+            "a pitch only 0.06 mm above pen clearance must still produce "
+            "visible row-local waveform, not a straight hatch",
+        )
+
     def test_fixed_baseline_wave_clearance_scales_at_all_angles_and_pitches(
         self,
     ):

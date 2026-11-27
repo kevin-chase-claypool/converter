@@ -45,10 +45,13 @@ CMYK has two production Wave contracts. **Wave screen - equidistant rows**
 treats exact adjacent-row pitch as a hard geometry constraint.
 **Variable-depth Wave - fixed baselines** instead treats the equal row-baseline
 lattice as the hard constraint and permits the visible instantaneous gaps to
-vary with row-local depth. Both default spacing guards keep the selected
-profile but apply a row-locked projection. The full measured field is evaluated
-in the effective screen frame, then averaged across the perpendicular row
-coordinate at each along-row position:
+vary with row-local depth. Near the pen-clearance limit it stretches the
+waveform wavelength and reduces row-to-row phase divergence before damping
+amplitude; with more clearance it restores independent phase and frequency.
+Both default spacing guards keep the selected profile but apply a row-locked
+projection. The full measured field is evaluated in the effective screen
+frame, then averaged across the perpendicular row coordinate at each along-row
+position:
 
 ```text
 C_row_locked(u) = average_v C_bed(u, v)

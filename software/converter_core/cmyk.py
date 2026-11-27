@@ -871,13 +871,6 @@ def _wave_rows(
                 "the effective pitch is smaller than the pen width plus "
                 "edge gap."
             )
-        # Equal positive/negative offsets on adjacent rows cannot reduce their
-        # same-column separation below this bound. The exact segment check
-        # below handles steep-flank approaches and damps only affected pairs.
-        amplitude_max = min(
-            amplitude_max,
-            max(0.0, (spacing - clearance) * 0.5),
-        )
     wavelength = spacing * 2.0
     # A piecewise-linear sine turns into visible facets when its samples are
     # too far apart. Bound the sagitta against the configured path budget:
@@ -1036,17 +1029,106 @@ def _wave_rows(
                     positions[row_index][x_index] = (x, y + offset)
     elif fixed_baseline_depth:
         clearance = max(0.0, float(minimum_clearance_mm))
+        clearance_target = clearance + 0.02
+        if clearance_target > spacing + 1e-9:
+            raise ValueError(
+                "Wave screen cannot keep adjacent pen strokes apart: "
+                "the effective pitch is smaller than the pen width plus "
+                "edge gap."
+            )
+        clearance_ratio = min(
+            1.0,
+            clearance / max(spacing, 1e-9),
+        )
+        maximum_depth = max(
+            (
+                max(row)
+                for row in smoothed_tone
+                if row
+            ),
+            default=0.0,
+        )
+        maximum_slope = (
+            math.sqrt(max(0.0, 1.0 - clearance_ratio * clearance_ratio))
+            * 0.75
+        )
+        if maximum_slope > 1e-6 and maximum_depth > 1e-6:
+            wavelength = max(
+                wavelength,
+                2.0
+                * math.pi
+                * amplitude_max
+                * maximum_depth
+                / maximum_slope,
+            )
         radians_per_mm = 2.0 * math.pi / wavelength
+        clearance_headroom = max(
+            0.0,
+            spacing - clearance,
+        )
+        phase_variation_strength = max(
+            0.0,
+            min(
+                1.0,
+                (
+                    clearance_headroom
+                    / max(spacing * 0.5, 1e-9)
+                    - 0.15
+                )
+                / 0.85,
+            ),
+        )
+        common_phase_offset = (
+            2.0
+            * math.pi
+            * ((int(seed) * 0.6180339887498949) % 1.0)
+        )
+        span = max(max_x - min_x, wavelength)
+
+        def common_frequency_variation(x_index, phase_offset):
+            if frequency_variation <= 1e-9:
+                return 0.0
+            return frequency_variation * (
+                0.6
+                * math.sin(
+                    2.0
+                    * math.pi
+                    * (x_values[x_index] - min_x)
+                    / max(span * 0.71, wavelength * 5.0)
+                    + phase_offset * 0.37
+                )
+                + 0.4
+                * math.sin(
+                    2.0
+                    * math.pi
+                    * (x_values[x_index] - min_x)
+                    / max(span * 0.29, wavelength * 2.2)
+                    + phase_offset * 0.83
+                )
+            )
+
+        common_phases = [common_phase_offset]
+        for x_index in range(1, len(x_values)):
+            delta_x = x_values[x_index] - x_values[x_index - 1]
+            frequency_scale = 1.0 + common_frequency_variation(
+                x_index,
+                common_phase_offset,
+            )
+            common_phases.append(
+                common_phases[-1]
+                + radians_per_mm * frequency_scale * delta_x
+            )
         row_phases = []
         for row_index, row_tone in enumerate(smoothed_tone):
             mean_tone = sum(row_tone) / max(len(row_tone), 1)
             phase_offset = (
-                2.0
+                common_phase_offset
+                + phase_variation_strength
+                * 2.0
                 * math.pi
                 * (
                     (
-                        int(seed) * 0.6180339887498949
-                        + row_index * 0.4142135623730950
+                        row_index * 0.4142135623730950
                         + mean_tone * 0.27
                     )
                     % 1.0
@@ -1056,32 +1138,17 @@ def _wave_rows(
             for x_index in range(1, len(x_values)):
                 delta_x = x_values[x_index] - x_values[x_index - 1]
                 tone = row_tone[x_index]
-                common_variation = 0.0
-                if frequency_variation > 1e-9:
-                    span = max(max_x - min_x, wavelength)
-                    common_variation = frequency_variation * (
-                        0.6
-                        * math.sin(
-                            2.0
-                            * math.pi
-                            * (x_values[x_index] - min_x)
-                            / max(span * 0.71, wavelength * 5.0)
-                            + phase_offset * 0.37
-                        )
-                        + 0.4
-                        * math.sin(
-                            2.0
-                            * math.pi
-                            * (x_values[x_index] - min_x)
-                            / max(span * 0.29, wavelength * 2.2)
-                            + phase_offset * 0.83
-                        )
-                    )
+                common_variation = common_frequency_variation(
+                    x_index,
+                    phase_offset,
+                )
                 frequency_scale = max(
                     0.5,
                     1.0
                     + common_variation
-                    + WAVE_FIXED_FREQUENCY_TONE_GAIN * (tone - 0.5),
+                    + WAVE_FIXED_FREQUENCY_TONE_GAIN
+                    * phase_variation_strength
+                    * (tone - 0.5),
                 )
                 phases.append(
                     phases[-1] + radians_per_mm * frequency_scale * delta_x
@@ -1098,11 +1165,19 @@ def _wave_rows(
                 for x_index, x in enumerate(x_values):
                     if tone_rows[row_index][x_index] < INK_FLOOR:
                         continue
-                    offset = (
+                    independent_offset = (
                         amplitude_max
-                        * scale
                         * smoothed_tone[row_index][x_index]
                         * math.sin(row_phases[row_index][x_index])
+                    )
+                    shared_offset = (
+                        amplitude_max
+                        * shared_tone[x_index]
+                        * math.sin(common_phases[x_index])
+                    )
+                    offset = scale * (
+                        phase_variation_strength * independent_offset
+                        + (1.0 - phase_variation_strength) * shared_offset
                     )
                     result[row_index][x_index] = (x, y + offset)
             return result
@@ -1114,7 +1189,11 @@ def _wave_rows(
             for row_index in range(len(row_ys) - 1):
                 first = _polyline_segments(positions[row_index])
                 second = _polyline_segments(positions[row_index + 1])
-                if _polyline_pair_is_clear(first, second, clearance):
+                if _polyline_pair_is_clear(
+                    first,
+                    second,
+                    clearance_target,
+                ):
                     continue
                 failed = True
                 low = 0.0
@@ -1130,7 +1209,7 @@ def _wave_rows(
                     if _polyline_pair_is_clear(
                         trial_first,
                         trial_second,
-                        clearance,
+                        clearance_target,
                     ):
                         best = fraction
                         low = fraction
@@ -1144,13 +1223,13 @@ def _wave_rows(
             if not failed and _wave_clearance_ok(
                 positions,
                 spacing,
-                minimum_clearance_mm,
+                clearance_target,
             ):
                 break
         if not _wave_clearance_ok(
             positions,
             spacing,
-            minimum_clearance_mm,
+            clearance_target,
         ):
             raise ValueError(
                 "Wave screen could not keep the fixed baseline rows clear "

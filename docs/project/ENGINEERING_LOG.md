@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261126-fixed-baseline-clearance-wavelength"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Keep visible fixed-baseline waves near pen clearance
+
+- A `1.21 mm` effective-pitch / `0.90 mm` pen preview rendered as straight
+  rows even though fixed-baseline spacing and row-lock were green. The saved
+  yellow source had 2,167 wave rows with only `0.002-0.060 mm` vertical range
+  and a `0.041 mm` median.
+- Root cause 1: fixed-baseline amplitude was capped to half the `0.06 mm`
+  clearance margin, or `0.03 mm`.
+- Root cause 2: after removing the cap, the original two-pitch wavelength made
+  steep row segments approach each other in Euclidean distance. The exact
+  pair limiter then reduced entire rows to `0.02-0.04 mm`, recreating the
+  straight-line symptom.
+- The fixed-baseline mode now keeps the full scene-driven amplitude, stretches
+  wavelength according to the available clearance, and reduces independent
+  row phase/frequency divergence only near the pen limit. Wider pitches retain
+  the original row-local variation.
+- The exact pairwise clearance check remains, with a `0.02 mm` internal target
+  margin to absorb SVG/G-code quantization and rotating interpolation.
+- The screenshot-geometry regression was red at `0.0345 mm` median and now
+  measures `0.6965 mm` without row-scale reduction.
+- The focused CMYK, Xθ/Yθ, final-coordinate, coupon, and contour suites pass
+  `150` tests. Complete converter discovery passes `663` tests with one
+  expected OpenGL-context skip.
+- Evidence: `WSW-20261126-014`;
+  `docs/changes/windows-software/2026/2026-11-26-fixed-baseline-clearance-wavelength.md`.
+- Category: windows-software, cmyk, wave-screen, fixed-baselines, clearance,
+  wavelength, preview, regression.
+
 <a id="elog-20261126-fixed-baseline-variable-depth-wave"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Add variable-depth Wave with fixed row baselines
 
