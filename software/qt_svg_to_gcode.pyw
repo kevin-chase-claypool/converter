@@ -4700,6 +4700,10 @@ class MainWindow(QMainWindow):
             )
             return
         self.gl_preview.set_sim_ink_colors(colors)
+        for _title, tab, _group, _description in self.generator_tools:
+            setter = getattr(tab, "set_ink_transmittances", None)
+            if callable(setter):
+                setter(colors)
         summary = ", ".join(
             f"{channel.upper()} ({colors[channel][0]:.2f}, "
             f"{colors[channel][1]:.2f}, {colors[channel][2]:.2f})"
@@ -4708,7 +4712,8 @@ class MainWindow(QMainWindow):
         )
         name = os.path.basename(str(path))
         self.log.append(
-            f"Ink simulation now uses measured profile {name}: {summary}"
+            f"CMYK separation and ink simulation now use measured profile "
+            f"{name}: {summary}"
         )
         self.ink_sim_check.setToolTip(
             "CMYK preview only: multiply the ink layers over the paper white "
@@ -4716,8 +4721,8 @@ class MainWindow(QMainWindow):
             f"profile {name}."
         )
         self.status.setText(
-            f"Ink profile loaded ({name}); the Ink simulation now uses the "
-            "measured pen colours."
+            f"Ink profile loaded ({name}); CMYK separation and the Ink "
+            "simulation now share the measured pen response."
         )
 
     def ink_engage_summary(self, contours, moves):

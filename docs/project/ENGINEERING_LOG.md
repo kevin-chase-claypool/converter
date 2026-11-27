@@ -1,5 +1,104 @@
 # Engineering Log
 
+<a id="elog-20261127-wave-fidelity-contrast-spikes"></a>
+### dYY" 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Make fidelity Wave amplitude follow immediate contrast
+
+- The owner corrected the Wave model: uniform tone should remain flat, while
+  a narrow light/dark edge should create a narrow amplitude spike proportional
+  to the immediate adjacent difference. The prior fidelity path smoothed depth
+  over `1.5` row pitches and seven rows and retained a `0.8` amplitude floor.
+- `waves_fidelity` now uses unsmoothed shared scene-luminance contrast for
+  amplitude and keeps separated per-ink absolute coverage for row density.
+  The source-pixel window catches one-pixel edges without multiplying the
+  output sample grid.
+- A synthetic narrow stripe changed from about `1.81 mm` background motion to
+  `0.004 mm`; the stripe produces a `0.971 mm` local response. Regressions also
+  require monotone spike height with adjacent difference and preserve
+  one-source-pixel lines.
+- The first adaptive-edge-output implementation passed the one-pixel test but
+  made the live oracle pass about four times slower; the bounded source-pixel
+  window retained the behavior with the normal output lattice.
+- The live-failed recipe remains red. Color/coverage gates, depth-delta, and
+  regional wave-amplitude gates remain open; this change corrects the requested
+  local-contrast response rather than claiming whole-composite fidelity.
+- Verification: Wave geometry `18 / 18`, CMYK tab `142 / 142`, oracle unit
+  tests `20 / 20`, and complete converter discovery `743` with one expected
+  OpenGL-context skip. The `256 px` live-recipe oracle run remains `FAIL`.
+- Evidence: `WSW-20261127-009`, ADR-015, and
+  `docs/changes/windows-software/2026/2026-11-27-wave-fidelity-contrast-spikes.md`.
+- Category: windows-software, cmyk, wave-screen, fidelity, local-contrast,
+  edge-spike, source-pixel-sampling, clearance.
+
+<a id="elog-20261127-cmyk-fidelity-integration"></a>
+### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Integrate the CMYK fidelity Wave pipeline
+
+- Added a red-capable software oracle that measures source/composite structure,
+  edge and luminance error, RGB/CIELAB colour, per-ink coverage correlation and
+  bias, actual Wave amplitude/cycles/interior variation across six crops, and
+  neutral-versus-high depth-intensity geometry. The owner's live failed recipe
+  is the primary baseline; a saved sidecar is a separate comparison profile.
+- Fixed two upstream fidelity defects: RGBA transparency was becoming black
+  before separation, and complement-only separation did not optimize against
+  the process-ink multiply response used by preview. Alpha now composites over
+  paper white, color-managed loading is shared, and measured profiles reach
+  both separation and simulation.
+- Fixed the live-pitch flattening path with a per-column amplitude envelope and
+  slope-aware clearance cap. At the live `1.265 mm` final pitch, direct final
+  geometry changed from C/M/Y/K straight fractions of
+  `69.8%/48.9%/10.7%/100%` to visible median waveforms around
+  `0.58/0.58/0.58/0.51 mm`.
+- Added **Variable-depth Wave - fidelity (tone density)**. It keeps the safe
+  fixed baseline lattice but skips light candidate rows deterministically, so
+  local ink density can fall below the continuous-row floor. Existing Wave
+  recipes are unchanged.
+- The integrated live recipe improved family-portrait structure correlation
+  to `0.895`, edge correlation to `0.417`, and luminance MAE to `0.175`;
+  RGB MAE is `0.176`. Seven oracle gates remain: M/Y/K local coverage MAE,
+  worst-region Delta-E, depth-delta, one regional span/amplitude limit, and
+  the documented single-pass density limit at the live pitch.
+- Failed or rejected approaches: widening the period without changing
+  amplitude made the waveform appear flat; independently phased rows required
+  almost all amplitude to be damped at tight pitch; fixed-pitch continuous
+  sine rows have a bounded density range; and parallel agent writes to the
+  same test/source files had to be stopped and restored before integration.
+- Evidence: `WSW-20261127-004`, `WSW-20261127-005`,
+  `WSW-20261127-006`, `WSW-20261127-007`, and ADR-015.
+- Category: windows-software, cmyk, wave-screen, color-management, alpha,
+  fidelity-oracle, fixed-baselines, tone-density, clearance.
+
+<a id="elog-20261127-wave-wavelength-proportional-amplitude"></a>
+### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Make fixed-baseline Wave amplitude follow wavelength
+
+- The owner reported that the Variable-depth Wave preview was "not waves";
+  most paths read as straight lines, and Depth intensity appeared inert. Root
+  cause: fixed-baseline crest height was `0.5 * pitch` regardless of the Wave
+  period, so the owner's `4 x pitch` period produced an amplitude-to-wavelength
+  ratio of `0.125` - visually straight - and a tortuosity ink-density range of
+  only about `1.15`.
+- Fixed by sizing full-tone crest height as `min(pitch, 0.25 * wavelength)`
+  times the Dot-size gain. On the source photo at the failure-state settings
+  this doubles the full-tone crest from `1.61 mm` to `3.22 mm`; cyan/magenta/
+  yellow rows now swing about `6.4 mm` peak-to-peak.
+- The shared nested phase carrier and fixed equal baselines are preserved, so
+  equal-amplitude adjacent rows stay exactly one pitch apart and the pen
+  clearance contract is unchanged. The path-tolerance sample bound now uses
+  the true fixed-baseline amplitude and wavenumber so longer periods stay
+  within the facet budget.
+- Black rows remain flat only because the current separation yields `0-0.15`
+  black coverage; that is handed to the color-separation workstream, not a
+  Wave-geometry defect.
+- Moved the Wave screening machinery (constants, clearance helpers, tone
+  smoothers, `_wave_rows`) from `cmyk.py` into `wave_rows.py` so the two
+  workstreams stop sharing one file; `cmyk.py` re-exports the names.
+- Verification: `test_cmyk_tab` passes `135` tests; the three Wave modules
+  pass `19` tests; `test_shading` + `test_sine_gradient` pass `45` tests. The
+  headless oracle composite SSIM stays `~0.014` at the failure-state settings,
+  confirming color fidelity remains a separation problem.
+- Evidence: `WSW-20261127-004`;
+  `docs/changes/windows-software/2026/2026-11-27-wave-wavelength-proportional-amplitude.md`.
+- Category: windows-software, cmyk, wave-screen, fixed-baselines, amplitude,
+  wavelength, module-split, regression.
+
 <a id="elog-20261127-cmyk-preview-triangle-ribbons"></a>
 ### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Separate CMYK preview joins from Wave geometry
 

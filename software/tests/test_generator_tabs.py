@@ -919,6 +919,16 @@ class ToolShellTests(unittest.TestCase):
         self.assertEqual(
             window.gl_preview.sim_ink_colors["c"], (0.6, 0.9, 0.95)
         )
+        cmyk_tab = next(
+            widget
+            for title, widget, _group, _description
+            in window.generator_tools
+            if title == "CMYK"
+        )
+        self.assertEqual(
+            cmyk_tab._ink_transmittances["c"],
+            (0.6, 0.9, 0.95),
+        )
         window.gl_preview.set_preview(
             converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c"),
             [],

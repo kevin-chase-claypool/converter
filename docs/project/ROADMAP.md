@@ -603,6 +603,36 @@ task rather than treated as the active production path.
   six zoom levels with no repeating saw teeth. This resolves the preview
   defect; physical striation, registration, and ink-spread qualification on
   the coupon remain open.
+  Status 2026-11-27 wave amplitude: `WSW-20261127-004` sizes the fixed-baseline
+  crest from the wavelength (`min(pitch, 0.25 x wavelength)` x Dot size) rather
+  than a fixed half-pitch, so the owner's `4 x pitch` period reads as a wave
+  instead of straight lines. The shared nested phase carrier and fixed
+  baselines are unchanged, and the Wave screening machinery moved from
+  `cmyk.py` to `wave_rows.py`. On the source photo at the failure-state
+  settings the full-tone crest doubles from `1.61` to `3.22 mm`; cyan/magenta/
+  yellow rows now swing about `6.4 mm` peak-to-peak. Black stays flat only
+  because the current separation gives `0-0.15` black coverage - the open
+  separation workstream, not Wave geometry.
+  Status 2026-11-27 fidelity integration: source alpha now composites over
+  paper white, CMYK separation and preview share one process-ink response,
+  measured profiles reach both, and the live-pitch amplitude envelope keeps
+  visible shared-phase waves. The new **Variable-depth Wave - fidelity (tone
+  density)** mode skips light candidate rows on the fixed safety lattice to
+  widen tonal coverage. The objective live-recipe oracle now passes structure,
+  edge, luminance-MAE, RGB-MAE, chroma, coverage-bias, and coverage-correlation
+  gates; M/Y/K local coverage MAE, worst-region Delta-E, depth-delta, and one
+  regional span/amplitude gate remain open (`WSW-20261127-004` through `-008`,
+  ADR-015). Physical ink spread and four-pass registration remain pending.
+  Status 2026-11-27 local contrast: `WSW-20261127-009` separates fidelity row
+  density from waveform amplitude. Smooth row-local scene depth still controls
+  period and absolute-tone density, while unsmoothed adjacent scene-luminance
+  contrast controls amplitude. Uniform tone is flat, a narrow line creates a
+  narrow spike, and a one-source-pixel line remains representable through a
+  one-pixel sampling window. The live-recipe oracle remains red with color and
+  coverage gates plus the regional amplitude/depth checks; this change was
+  accepted for the explicitly corrected edge-response model, not as a claim
+  that all composite-fidelity gates now pass. Physical print evidence remains
+  required.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

@@ -5,6 +5,12 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-27 | `WSW-20261127-009` | windows-software | implemented | [Make fidelity Wave amplitude follow immediate local contrast](windows-software/2026/2026-11-27-wave-fidelity-contrast-spikes.md) |
+| 2026-11-27 | `WSW-20261127-008` | windows-software | implemented | [Add coarse 2-D tone cells to Wave fidelity](windows-software/2026/2026-11-27-wave-fidelity-coarse-cell-dither.md) |
+| 2026-11-27 | `WSW-20261127-007` | windows-software | implemented | [Preserve transparent source colour and match CMYK to the composite](windows-software/2026/2026-11-27-cmyk-alpha-and-process-color.md) |
+| 2026-11-27 | `WSW-20261127-006` | windows-software | implemented | [Add tone-density fidelity to fixed-baseline Wave](windows-software/2026/2026-11-27-wave-fidelity-tone-density.md) |
+| 2026-11-27 | `WSW-20261127-005` | windows-software | implemented | [Preserve fixed-baseline Wave depth at the live low pitch](windows-software/2026/2026-11-27-wave-low-pitch-envelope.md) |
+| 2026-11-27 | `WSW-20261127-004` | windows-software | implemented | [Make fixed-baseline Wave amplitude proportional to wavelength](windows-software/2026/2026-11-27-wave-wavelength-proportional-amplitude.md) |
 | 2026-11-27 | `WSW-20261127-003` | windows-software | implemented | [Make Wave depth intensity decisive and render clean preview strokes](windows-software/2026/2026-11-27-wave-depth-contrast-and-texture.md) |
 | 2026-11-27 | `WSW-20261127-002` | windows-software | implemented | [Keep CMYK registration crosses visible after automatic fit](windows-software/2026/2026-11-27-cmyk-preview-registration-crosses.md) |
 | 2026-11-27 | `WSW-20261127-001` | windows-software | implemented | [Gate CMYK release on pointwise G-code registration](windows-software/2026/2026-11-27-cmyk-gcode-registration-gate.md) |

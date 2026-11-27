@@ -377,6 +377,10 @@ class CmykTab(GeneratorTab):
             "waves_fixed",
         )
         self.style.addItem(
+            "Variable-depth Wave - fidelity (tone density)",
+            "waves_fidelity",
+        )
+        self.style.addItem(
             "Wave screen - legacy phase-locked depth (diagnostic)",
             "waves_zero",
         )
@@ -391,7 +395,11 @@ class CmykTab(GeneratorTab):
             "Wave screen - equidistant rows translates one common waveform "
             "to every row. Variable-depth Wave keeps the same equally spaced "
             "row baselines but lets scene depth vary each row's waveform, so "
-            "visible gaps vary by design. The explicitly labeled legacy "
+            "visible gaps vary by design. Fidelity adds deterministic "
+            "tone-density row selection on that same baseline lattice and "
+            "uses immediate shared scene-lightness contrast for sharp "
+            "amplitude spikes. The "
+            "explicitly labeled legacy "
             "diagnostic restores the old raw-compensation comparison. Stored "
             "legacy values from older settings are promoted to an "
             "equidistant layout when regenerated."
@@ -498,13 +506,12 @@ class CmykTab(GeneratorTab):
             " %",
         )
         self.wave_depth_intensity.setToolTip(
-            "Contrast of the image depth driving each ink's waveform. 100 % "
-            "is neutral. Above 100 %, narrow light/dark differences are "
-            "expanded into decisive amplitude and period changes without "
-            "turning pixel texture into a second wave. The separate ink-"
-            "presence field is smoothed at pen scale so dark texture cannot "
-            "chop one carrier into repeated miniature waves; lower values "
-            "soften depth contrast."
+            "Strength of image-driven Wave depth. In fidelity mode, immediate "
+            "adjacent scene-lightness differences create narrow amplitude "
+            "spikes while uniform areas stay flat. Absolute per-ink tone "
+            "remains a separate smoothed row-density field. 100 % is neutral; "
+            "lower values soften spikes and higher values make them more "
+            "decisive."
         )
         screen.addRow("Depth intensity", self.wave_depth_intensity)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -821,6 +828,7 @@ class CmykTab(GeneratorTab):
         self._preview_visible = []
         self._layers_key = None
         self._layers_manifest = None
+        self._ink_transmittances = None
         self._analysis = None
         self._analysis_key = None
         self._thread = None
@@ -1024,6 +1032,30 @@ class CmykTab(GeneratorTab):
         if self.host is not None:
             self.host.generator_status(message)
 
+    def set_ink_transmittances(self, colors):
+        """Use measured ink response for separation and the shared preview."""
+        if colors is None:
+            normalized = None
+        else:
+            normalized = {
+                str(channel): tuple(float(value) for value in values[:3])
+                for channel, values in colors.items()
+                if channel in converter.CHANNELS
+                and isinstance(values, (list, tuple))
+                and len(values) >= 3
+            }
+            if not normalized:
+                normalized = None
+        if normalized == self._ink_transmittances:
+            return
+        self._ink_transmittances = normalized
+        self._layers = {}
+        self._layer_files = {}
+        self._layers_key = None
+        self._layers_manifest = None
+        self._analysis = None
+        self._analysis_key = None
+
     def pen_clearance_mm(self):
         """Minimum on-paper centre-line clearance for the active screen."""
         clearance = max(0.0, self.pen_width.value())
@@ -1031,6 +1063,7 @@ class CmykTab(GeneratorTab):
             "waves",
             "waves_even",
             "waves_fixed",
+            "waves_fidelity",
             "waves_zero",
         ):
             clearance += converter.WAVE_MIN_EDGE_GAP_MM
@@ -1039,7 +1072,7 @@ class CmykTab(GeneratorTab):
     def pen_pitch_mm(self):
         """Dot pitch that satisfies the active screen's pen clearance."""
         scale = max(0.01, self.scale_pct.value() / 100.0)
-        if self.style.currentData() == "waves_fixed":
+        if self.style.currentData() in ("waves_fixed", "waves_fidelity"):
             minimum_effective = converter.fixed_wave_minimum_pitch_mm(
                 self.pen_clearance_mm()
                 + converter.WAVE_CLEARANCE_SAFETY_MARGIN_MM,
@@ -1078,7 +1111,7 @@ class CmykTab(GeneratorTab):
             text = "= %.2f mm on paper" % effective
         if (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() == "waves_fixed"
+            and self.style.currentData() in ("waves_fixed", "waves_fidelity")
         ):
             base_period = effective * self.wave_period.value()
             variation = self.wave_period_variation.value() / 100.0
@@ -1125,7 +1158,7 @@ class CmykTab(GeneratorTab):
         )
         mode_text = (
             "Wave-safe baseline pitch"
-            if self.style.currentData() == "waves_fixed"
+            if self.style.currentData() in ("waves_fixed", "waves_fidelity")
             else "Dot pitch"
         )
         self.status.setText(
@@ -1242,7 +1275,10 @@ class CmykTab(GeneratorTab):
             pen_diameter_mm=self.pen_width.value(),
             compensate_pen_width=(
                 False
-                if self.style.currentData() == "waves_fixed"
+                if self.style.currentData() in (
+                    "waves_fixed",
+                    "waves_fidelity",
+                )
                 else settings.compensate_pen_width
             ),
             theta_mode=self.theta_mode.value(),
@@ -1514,6 +1550,7 @@ class CmykTab(GeneratorTab):
             self.gamma.value(),
             self.gcr.value(),
             self.resolution.value(),
+            repr(self._ink_transmittances),
             tuple(self._weights().items()),
             self.style.currentData(),
             self.pitch.value(),
@@ -1615,6 +1652,7 @@ class CmykTab(GeneratorTab):
             and self.style.currentData() in (
                 "waves_even",
                 "waves_fixed",
+                "waves_fidelity",
                 "waves_zero",
             )
         )
@@ -1630,7 +1668,7 @@ class CmykTab(GeneratorTab):
             )
         if not self._wave_spacing_guard_active():
             return "OFF - raw compensation may alter the row baselines"
-        if style == "waves_fixed":
+        if style in ("waves_fixed", "waves_fidelity"):
             effective_pitch = (
                 self.pitch.value()
                 * self.scale_pct.value()
@@ -1687,6 +1725,14 @@ class CmykTab(GeneratorTab):
                     "PASS: row-local depth with fixed, equally spaced "
                     "baselines is valid. Visible wavy gaps vary by design; "
                     "row-lock bed compensation is enforced. "
+                    "Tone-density gating skips light candidate rows. "
+                    if self.style.currentData() == "waves_fidelity"
+                    else
+                    "PASS: row-local depth with fixed, equally spaced "
+                    "baselines is valid. Visible wavy gaps vary by design; "
+                    "row-lock bed compensation is enforced. "
+                )
+                + (
                     "Base period %.1f x pitch; tone variation %.0f %%; "
                     "depth intensity %.0f %%."
                     % (
@@ -1694,7 +1740,10 @@ class CmykTab(GeneratorTab):
                         self.wave_period_variation.value(),
                         self.wave_depth_intensity.value(),
                     )
-                    if self.style.currentData() == "waves_fixed"
+                    if self.style.currentData() in (
+                        "waves_fixed",
+                        "waves_fidelity",
+                    )
                     else
                     "PASS: equidistant rows and row-lock bed compensation "
                     "are enforced."
@@ -1765,7 +1814,7 @@ class CmykTab(GeneratorTab):
                 continue
             label = converter.CHANNEL_LABELS[channel][0]
             if (
-                self.style.currentData() == "waves_fixed"
+                self.style.currentData() in ("waves_fixed", "waves_fidelity")
                 and "Wave fixed baselines" not in text
             ):
                 errors.append(
@@ -1785,7 +1834,11 @@ class CmykTab(GeneratorTab):
         """Whether to project compensation onto the Wave row lattice."""
         return (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() in ("waves_even", "waves_fixed")
+            and self.style.currentData() in (
+                "waves_even",
+                "waves_fixed",
+                "waves_fidelity",
+            )
             and self.preserve_wave_pitch.isChecked()
         )
 
@@ -1797,13 +1850,14 @@ class CmykTab(GeneratorTab):
         )
         fixed_baseline_selected = (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() == "waves_fixed"
+            and self.style.currentData() in ("waves_fixed", "waves_fidelity")
         )
         wave_selected = (
             not self.calibration_mode.isChecked()
             and self.style.currentData() in (
                 "waves_even",
                 "waves_fixed",
+                "waves_fidelity",
                 "waves_zero",
             )
         )
@@ -1835,7 +1889,11 @@ class CmykTab(GeneratorTab):
         """Whether the production Wave carrier varies frequency."""
         return (
             not self.calibration_mode.isChecked()
-            and self.style.currentData() in ("waves_even", "waves_fixed")
+            and self.style.currentData() in (
+                "waves_even",
+                "waves_fixed",
+                "waves_fidelity",
+            )
             and self.vary_wave_frequency.isChecked()
         )
 
@@ -1846,6 +1904,7 @@ class CmykTab(GeneratorTab):
             and self.style.currentData() in (
                 "waves_even",
                 "waves_fixed",
+                "waves_fidelity",
                 "waves_zero",
             )
             and self.contour_order.currentData() != "optimized"
@@ -1972,6 +2031,7 @@ class CmykTab(GeneratorTab):
             gcr=self.gcr.value() / 100.0,
             weights=self._weights(),
             gamma=self.gamma.value(),
+            transmittances=self._ink_transmittances,
             auto_levels=self.auto_levels.isChecked(),
             sharpen_pct=(
                 self.sharpen_amount.value()
@@ -2569,7 +2629,11 @@ class CmykTab(GeneratorTab):
             if final_scales
             else 1.0
         )
-        fixed_baseline_mode = style in ("waves_even", "waves_fixed")
+        fixed_baseline_mode = style in (
+            "waves_even",
+            "waves_fixed",
+            "waves_fidelity",
+        )
         source_value = getattr(self, "_artwork", "")
         if not source_value:
             artwork_path = getattr(self.host, "artwork_path", None)
@@ -2751,6 +2815,9 @@ class CmykTab(GeneratorTab):
                 "final_baseline_pitch_mm": final_baseline_pitch,
                 "final_fit_scale": final_fit_scale,
                 "row_layout": (
+                    "fixed_baselines_tone_density"
+                    if style == "waves_fidelity"
+                    else
                     "fixed_baselines_variable_instantaneous_gaps"
                     if style == "waves_fixed"
                     else "translated_rows_constant_instantaneous_gaps"
@@ -2769,7 +2836,7 @@ class CmykTab(GeneratorTab):
                     "row_local_depth_modulated"
                     if (
                         self._variable_wave_frequency_active()
-                        and style == "waves_fixed"
+                        and style in ("waves_fixed", "waves_fidelity")
                     )
                     else "shared_phase_modulated"
                     if self._variable_wave_frequency_active()
@@ -2786,6 +2853,25 @@ class CmykTab(GeneratorTab):
                 ),
                 "wave_depth_intensity_pct": (
                     self.wave_depth_intensity.value()
+                ),
+                "wave_amplitude_mode": (
+                    "shared_luminance_adjacent_contrast"
+                    if style == "waves_fidelity"
+                    else "smoothed_row_depth"
+                    if style in ("waves", "waves_fixed", "waves_zero")
+                    else "translated_shared_carrier"
+                    if style == "waves_even"
+                    else "not_applicable"
+                ),
+                "wave_contrast_spike_gain": (
+                    converter.WAVE_FIDELITY_CONTRAST_GAIN
+                    if style == "waves_fidelity"
+                    else None
+                ),
+                "wave_amplitude_floor": (
+                    0.0
+                    if style == "waves_fidelity"
+                    else None
                 ),
                 "base_wave_period_mm": (
                     final_baseline_pitch * self.wave_period.value()
@@ -2812,6 +2898,9 @@ class CmykTab(GeneratorTab):
                     "waves": "bounded_row_depth",
                     "waves_even": "identical_translated_rows",
                     "waves_fixed": "row_local_fixed_baseline_depth",
+                    "waves_fidelity": (
+                        "row_local_fixed_baseline_depth_and_tone_density"
+                    ),
                     "waves_zero": "shared_zero_anchored",
                 }.get(style),
             },
@@ -2819,7 +2908,7 @@ class CmykTab(GeneratorTab):
                 {
                     "mode": (
                         "fixed_baselines"
-                        if style == "waves_fixed"
+                        if style in ("waves_fixed", "waves_fidelity")
                         else "constant_baselines"
                     ),
                     "pitch_mm": final_baseline_pitch,
@@ -2828,7 +2917,9 @@ class CmykTab(GeneratorTab):
                     ),
                     "final_fit_scale": final_fit_scale,
                     "instantaneous_gap_semantics": (
-                        "varies_by_design"
+                        "varies_by_design_with_tone_density"
+                        if style == "waves_fidelity"
+                        else "varies_by_design"
                         if style == "waves_fixed"
                         else "constant"
                     ),

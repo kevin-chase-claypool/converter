@@ -13,6 +13,7 @@ G-code.
 
 from __future__ import annotations
 
+import io
 import math
 
 import numpy as np
@@ -26,69 +27,267 @@ from .shading import (
     stipple_points,
     tone_terrain_contours,
 )
+from .wave_rows import (
+    DEFAULT_WAVE_DEPTH_INTENSITY,
+    DEFAULT_WAVE_PERIOD_PITCHES,
+    DEFAULT_WAVE_PERIOD_VARIATION,
+    fixed_wave_minimum_pitch_mm,
+    INK_FLOOR,
+    WAVE_CLEARANCE_SAFETY_MARGIN_MM,
+    WAVE_CLEARANCE_SEARCH_STEPS,
+    WAVE_COVERAGE_ALONG_SMOOTHING_PITCHES,
+    WAVE_COVERAGE_ROW_WINDOW,
+    WAVE_DEPTH_ALONG_SMOOTHING_PITCHES,
+    WAVE_DEPTH_ROW_WINDOW,
+    WAVE_FIXED_FREQUENCY_TONE_GAIN,
+    WAVE_FREQUENCY_VARIATION,
+    WAVE_MAX_ADJACENT_GAP_FRACTION,
+    WAVE_MIN_EDGE_GAP_MM,
+    WAVE_NESTED_PITCH_SAFETY_FACTOR,
+    _local_frame,
+    _point_segment_distance,
+    _polyline_pair_is_clear,
+    _polyline_segments,
+    _segment_distance,
+    _smooth_tone_row,
+    _smooth_tone_rows,
+    _wave_clearance_ok,
+    _wave_rows,
+)
+
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
+# Nominal full-coverage transmittances for the Tombow process-marker set.
+# The same values feed separation, the saved preview, and code overlays unless
+# a scanned ink profile replaces them.
 CHANNEL_COLORS = {
-    "c": "#00a6d6",
-    "m": "#d6009a",
-    "y": "#f0c400",
-    "k": "#222222",
+    "c": "#00aeef",
+    "m": "#ec008c",
+    "y": "#ffff00",
+    "k": "#231f20",
 }
 
 # Classic rotated screens: C 15, M 75, Y 0, K 45 degrees.
 SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
 
-# Below this ink coverage a mark is dropped so paper stays clean.
-INK_FLOOR = 0.06
-# Preserve broad vertical image tone in wave height, but average over enough
-# rows that row-frequency detail cannot make neighbouring curves jitter.
-WAVE_DEPTH_ROW_WINDOW = 7
-# Keep paper texture and sharp image detail from modulating phase/amplitude as
-# a second waveform riding on the designed Wave carrier.
-WAVE_DEPTH_ALONG_SMOOTHING_PITCHES = 1.5
-# Use a smoothed coverage field to decide where a Wave row exists. Raw
-# per-pixel channel coverage can cross INK_FLOOR repeatedly inside one dark
-# area, chopping the carrier into many short wavelets that read as nested
-# waveforms in a zoomed preview.
-WAVE_COVERAGE_ALONG_SMOOTHING_PITCHES = 2.5
-WAVE_COVERAGE_ROW_WINDOW = 3
-# A row may not depart from its neighbour by more than this fraction of the
-# nominal pitch. The resulting gap remains between 88% and 112% of pitch,
-# keeping the intended depth variation without crossings or runaway gaps.
-WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
-# The second clearance check measures the actual shortest distance between
-# emitted row segments, not only their separation at matching sample columns.
-# Keep at least this much bare paper between the nominal pen edges.
-WAVE_MIN_EDGE_GAP_MM = 0.25
-WAVE_CLEARANCE_SEARCH_STEPS = 7
-# Smoothly vary the shared Wave carrier frequency across the image. The phase
-# remains common to every row, so this breaks coherent crest/trough columns
-# without changing the perpendicular distance between row baselines.
-WAVE_FREQUENCY_VARIATION = 0.18
-# The fixed-baseline mode keeps each row's own phase and lets local scene
-# depth vary its winding rate by up to this fraction. Baseline spacing remains
-# independent of that waveform choice.
-WAVE_FIXED_FREQUENCY_TONE_GAIN = 0.32
-DEFAULT_WAVE_PERIOD_PITCHES = 2.0
-DEFAULT_WAVE_PERIOD_VARIATION = 0.35
-DEFAULT_WAVE_DEPTH_INTENSITY = 1.0
-WAVE_CLEARANCE_SAFETY_MARGIN_MM = 0.02
-WAVE_NESTED_PITCH_SAFETY_FACTOR = 1.05
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
 
+# Nominal full-coverage transmittances for the preview's process ink set.
+# A measured profile can override these per image.
+NOMINAL_INK_TRANSMITTANCES = {
+    channel: tuple(
+        int(color.lstrip("#")[index : index + 2], 16) / 255.0
+        for index in (0, 2, 4)
+    )
+    for channel, color in CHANNEL_COLORS.items()
+}
+# Maximum combined ink coverage (total area coverage) before the separation
+# clips. Keeps the four overlaid Wave plates from stacking into a solid black
+# puddle where the source asks for pure shadow.
+DEFAULT_INK_LIMIT = 3.2
 
-def fixed_wave_minimum_pitch_mm(
-    clearance_mm,
-    **_options,
+
+def ink_transmittance_matrix(transmittances=None):
+    """Return a ``(4, 3)`` float32 transmittance matrix in CMYK order."""
+    import numpy as np
+
+    colors = dict(NOMINAL_INK_TRANSMITTANCES)
+    if transmittances:
+        colors.update(
+            {
+                str(channel): value
+                for channel, value in transmittances.items()
+                if channel in CHANNELS
+            }
+        )
+    matrix = []
+    for channel in CHANNELS:
+        value = colors[channel]
+        if isinstance(value, str):
+            text = value.strip().lstrip("#")
+            if len(text) != 6:
+                raise ValueError(
+                    f"{channel} ink colour must be a six-digit hex value"
+                )
+            triple = [
+                int(text[index : index + 2], 16) / 255.0
+                for index in (0, 2, 4)
+            ]
+        else:
+            triple = [float(component) for component in tuple(value)[:3]]
+            if len(triple) != 3:
+                raise ValueError(
+                    f"{channel} ink transmittance needs three RGB values"
+                )
+        matrix.append(np.clip(triple, 1e-4, 1.0))
+    return np.asarray(matrix, dtype=np.float32)
+
+
+def _load_color_managed_image(image_path):
+    """Open an image as sRGB, applying EXIF orientation and paper alpha."""
+    from PIL import Image, ImageCms, ImageOps
+
+    with Image.open(image_path) as source:
+        image = ImageOps.exif_transpose(source)
+        profile = image.info.get("icc_profile")
+        if image.mode in ("RGBA", "LA") or "transparency" in image.info:
+            rgba = image.convert("RGBA")
+            background = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+            background.alpha_composite(rgba)
+            image = background.convert("RGB")
+        elif profile and image.mode == "RGB":
+            try:
+                source_profile = ImageCms.ImageCmsProfile(io.BytesIO(profile))
+                target_profile = ImageCms.createProfile("sRGB")
+                image = ImageCms.profileToProfile(
+                    image,
+                    source_profile,
+                    target_profile,
+                    outputMode="RGB",
+                    renderingIntent=ImageCms.Intent.PERCEPTUAL,
+                )
+            except (ImageCms.PyCMSError, OSError, ValueError):
+                image = image.convert("RGB")
+        else:
+            image = image.convert("RGB")
+    return image
+
+
+def _gamma_luminance_target(rgb, gamma):
+    """Apply an ink gamma to the target luminance before separation.
+
+    Gamma now means what operators expect: values above 1 darken the picture
+    and therefore request more ink. Hue is preserved by scaling the channels
+    by the ratio of shaped to original luminance, so a skin tone does not
+    shift pink when the picture is darkened.
+    """
+    import numpy as np
+
+    gamma = max(1e-3, float(gamma))
+    if abs(gamma - 1.0) <= 1e-9:
+        return rgb
+    luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+    shaped = np.power(np.clip(luminance, 0.0, 1.0), gamma)
+    ratio = np.divide(
+        shaped,
+        np.maximum(luminance, 1e-6),
+        out=np.ones_like(luminance),
+        where=luminance > 1e-6,
+    )
+    return np.clip(rgb * ratio[:, :, None], 0.0, 1.0)
+
+
+def multiply_composite_rgb(coverage, transmittances=None):
+    """Composite CMYK coverage arrays into RGB via ink transmittances."""
+    import numpy as np
+
+    transmission = ink_transmittance_matrix(transmittances)
+    result = np.ones(
+        (*np.asarray(coverage["c"]).shape, 3),
+        dtype=np.float32,
+    )
+    for index, channel in enumerate(CHANNELS):
+        amount = np.clip(
+            np.asarray(coverage[channel], dtype=np.float32),
+            0.0,
+            1.0,
+        )[..., None]
+        result *= 1.0 - amount * (1.0 - transmission[index])
+    return np.clip(result, 0.0, 1.0)
+
+
+def separate_cmyk_composite(
+    rgb,
+    gcr=1.0,
+    weights=None,
+    gamma=1.0,
+    transmittances=None,
+    ink_limit=DEFAULT_INK_LIMIT,
+    iterations=8,
 ):
-    """Minimum effective pitch for nested fixed-baseline Wave rows."""
-    clearance = max(0.0, float(clearance_mm))
-    return (
-        clearance + WAVE_CLEARANCE_SAFETY_MARGIN_MM
-    ) * WAVE_NESTED_PITCH_SAFETY_FACTOR
+    """Invert the multiply ink model to produce faithful CMYK coverage.
+
+    ``rgb`` is an ``(h, w, 3)`` array in 0..1. The forward model is the same
+    one the preview uses: each ink multiplies the paper white by
+    ``1 - coverage * (1 - transmittance)``. Naive complement separation does
+    not account for the real inks, so the composite comes out washed, gray,
+    and short on black. This function inverts that model per pixel with a
+    coordinate descent in log density, seeded by classic gray-component
+    replacement, then applies the total-ink limit and per-channel weights.
+
+    ``gcr`` (0..1) controls how much of the gray component the seed moves
+    into K before the fine solve; ``weights`` scale each final coverage;
+    ``gamma`` shapes the target luminance first (above 1 darkens).
+    """
+    import numpy as np
+
+    values = np.asarray(rgb, dtype=np.float32)
+    if values.ndim != 3 or values.shape[2] != 3:
+        raise ValueError("Expected an (h, w, 3) RGB array.")
+    target = np.clip(values, 0.0, 1.0)
+    target = _gamma_luminance_target(target, gamma)
+
+    transmission = ink_transmittance_matrix(transmittances)
+    absorptance = np.clip(1.0 - transmission, 1e-6, 1.0)
+
+    red, green, blue = target[..., 0], target[..., 1], target[..., 2]
+    c = 1.0 - red
+    m = 1.0 - green
+    y = 1.0 - blue
+    k = np.minimum(np.minimum(c, m), y) * min(1.0, max(0.0, float(gcr)))
+    k = np.clip(k, 0.0, 1.0)
+    denominator = np.maximum(1.0 - k, 1e-6)
+    c = np.where(k > 0.0, (c - k) / denominator, c)
+    m = np.where(k > 0.0, (m - k) / denominator, m)
+    y = np.where(k > 0.0, (y - k) / denominator, y)
+    inks = np.clip(np.stack([c, m, y, k], axis=-1), 0.0, 1.0)
+
+    target_density = -np.log(np.clip(target, 1e-6, 1.0))
+
+    for _iteration in range(max(1, int(iterations))):
+        rendered = np.ones_like(target)
+        for index in range(len(CHANNELS)):
+            amount = inks[..., index : index + 1]
+            rendered *= 1.0 - amount * (1.0 - transmission[index])
+        rendered = np.clip(rendered, 1e-6, 1.0)
+        residual = target_density - (-np.log(rendered))
+        for index in range(len(CHANNELS)):
+            amount = inks[..., index : index + 1]
+            denominator = 1.0 - amount * absorptance[index]
+            gradient = absorptance[index] / np.maximum(denominator, 1e-6)
+            numerator = np.sum(residual * gradient, axis=-1)
+            norm = np.sum(gradient * gradient, axis=-1) + 1e-9
+            step = numerator / norm
+            updated = np.clip(amount[..., 0] + step, 0.0, 1.0)
+            delta = updated - amount[..., 0]
+            inks[..., index] = updated
+            residual = residual - delta[..., None] * gradient
+
+    c, m, y, k = (inks[..., index] for index in range(len(CHANNELS)))
+    total = c + m + y + k
+    ink_limit = max(0.0, float(ink_limit))
+    over = np.maximum(0.0, total - ink_limit)
+    if np.any(over > 0.0):
+        scale = np.where(
+            total > ink_limit,
+            ink_limit / np.maximum(total, 1e-6),
+            1.0,
+        )
+        c = c * scale
+        m = m * scale
+        y = y * scale
+        k = k * scale
+
+    weight_map = _weight_map(weights)
+    tones = {}
+    for channel, array in (("c", c), ("m", m), ("y", y), ("k", k)):
+        tone = np.clip(array, 0.0, 1.0) * weight_map[channel]
+        tones[channel] = np.clip(tone, 0.0, 1.0).astype(np.float32)
+    return tones
+
 
 
 class InkTrail(list):
@@ -270,7 +469,7 @@ def auto_photo_settings(
     from PIL import Image
     import numpy as np
 
-    image = Image.open(image_path).convert("RGB")
+    image = _load_color_managed_image(image_path)
     longest = max(image.width, image.height)
     factor = min(1.0, max(32, int(resolution_px)) / float(longest))
     if factor < 1.0:
@@ -295,22 +494,28 @@ def auto_photo_settings(
         return int(round(value / step) * step)
 
     style_key = str(style or "").strip().lower()
-    if style_key in ("waves", "waves_even", "waves_zero", "waves_fixed"):
-        # The wave screen is a line mask, not a tone-varying line pitch. Its
-        # tonal range is therefore much narrower than the generic search
-        # assumes. Preserve the source's normal exposure instead of driving
-        # contrast and ink gamma to their limits to create extra gradients.
+    if style_key in (
+        "waves",
+        "waves_even",
+        "waves_zero",
+        "waves_fixed",
+        "waves_fidelity",
+    ):
+        # The wave screen is a line mask, not a tone-varying line pitch. Keep
+        # the source's normal exposure and let composite-aware separation do
+        # the colour work, instead of pushing brightness and gamma high
+        # enough to wash the plate out (the old failure-state recipe).
         p05, p50, p95 = (
             float(value)
             for value in np.percentile(luminance, [5.0, 50.0, 95.0])
         )
         tonal_range = p95 - p05
         chroma_p90 = float(np.percentile(chroma, 90.0))
-        brightness = clamp(160.0 + (0.50 - p50) * 120.0, 100.0, 200.0)
-        contrast = clamp(125.0 + (0.65 - tonal_range) * 100.0, 100.0, 180.0)
-        gamma = clamp(1.45 + (0.55 - p50) * 0.75, 0.85, 1.80)
-        saturation = clamp(100.0 + (0.30 - chroma_p90) * 30.0, 90.0, 130.0)
-        gcr = clamp(70.0 - max(0.0, chroma_p90 - 0.15) * 160.0, 0.0, 85.0)
+        brightness = clamp(120.0 + (0.50 - p50) * 80.0, 105.0, 150.0)
+        contrast = clamp(115.0 + (0.65 - tonal_range) * 40.0, 105.0, 150.0)
+        gamma = clamp(1.10 + (0.50 - p50) * 0.25, 0.95, 1.35)
+        saturation = clamp(105.0 + (0.30 - chroma_p90) * 25.0, 95.0, 110.0)
+        gcr = clamp(60.0 - max(0.0, chroma_p90 - 0.15) * 120.0, 20.0, 70.0)
         result = {
             "auto_levels": True,
             "brightness": round_up_to(brightness, 5),
@@ -464,6 +669,8 @@ def prepare_image_tones(
     gcr=1.0,
     weights=None,
     gamma=1.0,
+    transmittances=None,
+    ink_limit=DEFAULT_INK_LIMIT,
     auto_levels=True,
     level_clip_pct=1.0,
     sharpen_pct=0.0,
@@ -491,7 +698,7 @@ def prepare_image_tones(
     check_cancelled(cancel_check)
     draw_w = max(5.0, float(width_mm) - 2.0 * float(margin_mm))
     draw_h = max(5.0, float(height_mm) - 2.0 * float(margin_mm))
-    image = Image.open(image_path).convert("RGB")
+    image = _load_color_managed_image(image_path)
     scale = min(draw_w / image.width, draw_h / image.height)
     scale_w = max(1.0, image.width * scale)
     scale_h = max(1.0, image.height * scale)
@@ -547,7 +754,14 @@ def prepare_image_tones(
         exponent = 100.0 / max(1.0, brightness)
         rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
-    tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
+    tones = separate_cmyk_composite(
+        rgb,
+        gcr=gcr,
+        weights=weights,
+        gamma=gamma,
+        transmittances=transmittances,
+        ink_limit=ink_limit,
+    )
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
     tones["depth"] = (1.0 - depth_luminance).astype(np.float32)
@@ -582,22 +796,6 @@ def tone_sampler(tone, geometry):
     return sample
 
 
-def _local_frame(bounds, angle_deg):
-    """Rotated bounding box of a rectangle plus the local->world basis."""
-    left, top, right, bottom = (float(value) for value in bounds)
-    angle = math.radians(float(angle_deg))
-    ca, sa = math.cos(angle), math.sin(angle)
-    cs, sn = math.cos(-angle), math.sin(-angle)
-    corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
-    rotated = [(x * cs - y * sn, x * sn + y * cs) for x, y in corners]
-    return (
-        min(point[0] for point in rotated),
-        max(point[0] for point in rotated),
-        min(point[1] for point in rotated),
-        max(point[1] for point in rotated),
-        ca,
-        sa,
-    )
 
 
 def _line_runs(
@@ -744,948 +942,6 @@ def _stitch_runs(rows, darkness, ca, sa, threshold):
     return finished
 
 
-def _point_segment_distance(point, start, end):
-    """Return the shortest distance from *point* to a finite segment."""
-    vx = end[0] - start[0]
-    vy = end[1] - start[1]
-    wx = point[0] - start[0]
-    wy = point[1] - start[1]
-    length_sq = vx * vx + vy * vy
-    if length_sq <= 1e-18:
-        return math.hypot(wx, wy)
-    fraction = max(0.0, min(1.0, (wx * vx + wy * vy) / length_sq))
-    return math.hypot(
-        point[0] - (start[0] + fraction * vx),
-        point[1] - (start[1] + fraction * vy),
-    )
-
-
-def _segment_distance(first_a, first_b, second_a, second_b):
-    """Return the shortest distance between two finite 2-D segments."""
-    first_x = first_b[0] - first_a[0]
-    first_y = first_b[1] - first_a[1]
-    second_x = second_b[0] - second_a[0]
-    second_y = second_b[1] - second_a[1]
-    denominator = first_x * second_y - first_y * second_x
-    if abs(denominator) > 1e-12:
-        delta_x = second_a[0] - first_a[0]
-        delta_y = second_a[1] - first_a[1]
-        first_fraction = (
-            delta_x * second_y - delta_y * second_x
-        ) / denominator
-        second_fraction = (
-            delta_x * first_y - delta_y * first_x
-        ) / denominator
-        if (
-            0.0 <= first_fraction <= 1.0
-            and 0.0 <= second_fraction <= 1.0
-        ):
-            return 0.0
-    return min(
-        _point_segment_distance(first_a, second_a, second_b),
-        _point_segment_distance(first_b, second_a, second_b),
-        _point_segment_distance(second_a, first_a, first_b),
-        _point_segment_distance(second_b, first_a, first_b),
-    )
-
-
-def _polyline_segments(points):
-    """Return the non-blank segments from one row of sampled points."""
-    return [
-        (first, second)
-        for first, second in zip(points, points[1:])
-        if first is not None and second is not None
-    ]
-
-
-def _polyline_pair_is_clear(first_segments, second_segments, minimum):
-    """Check two x-monotone polylines using a linear segment sweep."""
-    if not first_segments or not second_segments:
-        return True
-    if len(first_segments) * len(second_segments) >= 256:
-        first = np.asarray(
-            first_segments,
-            dtype=np.float64,
-        ).reshape(-1, 4)
-        second = np.asarray(
-            second_segments,
-            dtype=np.float64,
-        ).reshape(-1, 4)
-        first_min_x = np.minimum(first[:, 0], first[:, 2])
-        first_max_x = np.maximum(first[:, 0], first[:, 2])
-        second_min_x = np.minimum(second[:, 0], second[:, 2])
-        second_max_x = np.maximum(second[:, 0], second[:, 2])
-        overlapping = (
-            (second_min_x[None, :] <= first_max_x[:, None] + minimum)
-            & (second_max_x[None, :] >= first_min_x[:, None] - minimum)
-        )
-        first_index, second_index = np.nonzero(overlapping)
-        if not len(first_index):
-            return True
-        first = first[first_index]
-        second = second[second_index]
-        first_x = first[:, 2] - first[:, 0]
-        first_y = first[:, 3] - first[:, 1]
-        second_x = second[:, 2] - second[:, 0]
-        second_y = second[:, 3] - second[:, 1]
-        denominator = first_x * second_y - first_y * second_x
-        delta_x = second[:, 0] - first[:, 0]
-        delta_y = second[:, 1] - first[:, 1]
-        nonzero = np.abs(denominator) > 1e-12
-        first_fraction = np.divide(
-            delta_x * second_y - delta_y * second_x,
-            denominator,
-            out=np.full_like(denominator, -1.0),
-            where=nonzero,
-        )
-        second_fraction = np.divide(
-            delta_x * first_y - delta_y * first_x,
-            denominator,
-            out=np.full_like(denominator, -1.0),
-            where=nonzero,
-        )
-        if np.any(
-            nonzero
-            & (first_fraction >= 0.0)
-            & (first_fraction <= 1.0)
-            & (second_fraction >= 0.0)
-            & (second_fraction <= 1.0)
-        ):
-            return False
-
-        def point_segment_distance(
-            point_x,
-            point_y,
-            start_x,
-            start_y,
-            end_x,
-            end_y,
-        ):
-            vector_x = end_x - start_x
-            vector_y = end_y - start_y
-            length_sq = vector_x * vector_x + vector_y * vector_y
-            projection = np.divide(
-                (point_x - start_x) * vector_x
-                + (point_y - start_y) * vector_y,
-                length_sq,
-                out=np.zeros_like(length_sq),
-                where=length_sq > 1e-18,
-            )
-            projection = np.clip(projection, 0.0, 1.0)
-            return np.hypot(
-                point_x - (start_x + projection * vector_x),
-                point_y - (start_y + projection * vector_y),
-            )
-
-        distances = np.minimum.reduce(
-            (
-                point_segment_distance(
-                    first[:, 0],
-                    first[:, 1],
-                    second[:, 0],
-                    second[:, 1],
-                    second[:, 2],
-                    second[:, 3],
-                ),
-                point_segment_distance(
-                    first[:, 2],
-                    first[:, 3],
-                    second[:, 0],
-                    second[:, 1],
-                    second[:, 2],
-                    second[:, 3],
-                ),
-                point_segment_distance(
-                    second[:, 0],
-                    second[:, 1],
-                    first[:, 0],
-                    first[:, 1],
-                    first[:, 2],
-                    first[:, 3],
-                ),
-                point_segment_distance(
-                    second[:, 2],
-                    second[:, 3],
-                    first[:, 0],
-                    first[:, 1],
-                    first[:, 2],
-                    first[:, 3],
-                ),
-            )
-        )
-        return bool(np.all(distances >= minimum - 1e-9))
-    second_index = 0
-    for first_a, first_b in first_segments:
-        first_min_x = min(first_a[0], first_b[0])
-        first_max_x = max(first_a[0], first_b[0])
-        while (
-            second_index < len(second_segments)
-            and max(
-                second_segments[second_index][0][0],
-                second_segments[second_index][1][0],
-            )
-            < first_min_x - minimum
-        ):
-            second_index += 1
-        check_index = second_index
-        while check_index < len(second_segments):
-            second_a, second_b = second_segments[check_index]
-            second_min_x = min(second_a[0], second_b[0])
-            second_max_x = max(second_a[0], second_b[0])
-            if second_min_x > first_max_x + minimum:
-                break
-            if (
-                _segment_distance(first_a, first_b, second_a, second_b)
-                < minimum - 1e-9
-            ):
-                return False
-            check_index += 1
-    return True
-
-
-def _wave_clearance_ok(
-    positions,
-    spacing,
-    minimum_clearance_mm=0.0,
-):
-    """Check the shortest distance between adjacent visible row segments."""
-    minimum_clearance = max(0.0, float(minimum_clearance_mm))
-    if minimum_clearance:
-        visible_rows = [
-            segments
-            for row in positions
-            if (segments := _polyline_segments(row))
-        ]
-        for first_row, second_row in zip(visible_rows, visible_rows[1:]):
-            if not _polyline_pair_is_clear(
-                first_row,
-                second_row,
-                minimum_clearance,
-            ):
-                return False
-    return True
-
-
-def _smooth_tone_row(values, radius):
-    """Return a horizontal box-smoothed tone row without per-pixel ripples."""
-    if radius <= 0 or len(values) < 3:
-        return list(values)
-    prefix = [0.0]
-    for value in values:
-        prefix.append(prefix[-1] + float(value))
-    smoothed = []
-    last = len(values) - 1
-    for index in range(len(values)):
-        low = max(0, index - radius)
-        high = min(last, index + radius)
-        smoothed.append(
-            (prefix[high + 1] - prefix[low]) / max(high - low + 1, 1)
-        )
-    return smoothed
-
-
-def _smooth_tone_rows(rows, along_radius, row_window):
-    """Smooth tone spatially in the Wave screen's row frame."""
-    if not rows:
-        return []
-    horizontally_smoothed = [
-        _smooth_tone_row(row, along_radius)
-        for row in rows
-    ]
-    window = min(max(1, int(row_window)), len(horizontally_smoothed))
-    if window <= 1:
-        return horizontally_smoothed
-    smoothed = []
-    for row_index in range(len(horizontally_smoothed)):
-        low = min(
-            max(0, row_index - window // 2),
-            len(horizontally_smoothed) - window,
-        )
-        high = low + window
-        smoothed.append(
-            [
-                sum(
-                    horizontally_smoothed[index][x_index]
-                    for index in range(low, high)
-                )
-                / window
-                for x_index in range(len(horizontally_smoothed[row_index]))
-            ]
-        )
-    return smoothed
-
-
-def _wave_rows(
-    darkness,
-    bounds,
-    angle_deg,
-    spacing,
-    amplitude_scale,
-    min_length_mm=0.8,
-    cancel_check=None,
-    path_tolerance_mm=0.05,
-    depth_darkness=None,
-    equal_spacing=False,
-    zero_anchored_depth=False,
-    fixed_baseline_depth=False,
-    minimum_clearance_mm=0.0,
-    wave_frequency_variation=0.0,
-    wave_period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
-    wave_period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
-    wave_depth_intensity=DEFAULT_WAVE_DEPTH_INTENSITY,
-    seed=0,
-):
-    """Sine rows with tone-driven depth and a safety envelope.
-
-    Local tone still masks each mark to the image. A locally smoothed two-axis
-    tone field also varies wave shape without turning image texture into a
-    second high-frequency wave. The phase-locked depth mode
-    keeps one phase carrier across all rows and varies only their amplitude
-    from scene depth. The equidistant mode translates one common waveform with
-    no row-specific movement. The fixed-baseline mode keeps the equal row
-    lattice but lets local depth vary each row's amplitude, phase, and phase
-    rate. All modes use the final shortest-segment check to preserve the
-    configured pen envelope.
-    """
-    min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
-    spacing = max(0.2, float(spacing))
-    amplitude_scale = max(0.05, float(amplitude_scale))
-    if zero_anchored_depth:
-        # Adjacent row bands meet, but cannot overlap, at half the pitch. This
-        # keeps nearest-neighbour checking local to consecutive rows.
-        amplitude_scale = min(1.0, amplitude_scale)
-    amplitude_max = spacing * 0.5 * amplitude_scale
-    if fixed_baseline_depth:
-        clearance = max(0.0, float(minimum_clearance_mm))
-        if clearance > spacing + 1e-9:
-            raise ValueError(
-                "Wave screen cannot keep adjacent pen strokes apart: "
-                "the effective pitch is smaller than the pen width plus "
-                "edge gap."
-            )
-    wavelength = (
-        spacing * max(0.5, float(wave_period_pitches))
-        if fixed_baseline_depth
-        else spacing * 2.0
-    )
-    # A piecewise-linear sine turns into visible facets when its samples are
-    # too far apart. Bound the sagitta against the configured path budget:
-    # max|y''| for amplitude_max * sin(2*pi*x/wavelength) is amplitude_max *
-    # (pi/spacing)^2, and a chord of length h has about h^2/8 times that
-    # curvature as its midpoint error.
-    frequency_variation = max(
-        0.0, min(0.45, float(wave_frequency_variation))
-    )
-    max_frequency_scale = (
-        1.0
-        + (frequency_variation if equal_spacing else 0.0)
-        + (
-            WAVE_FIXED_FREQUENCY_TONE_GAIN * 0.5
-            if fixed_baseline_depth and wave_period_variation <= 0.0
-            else max(0.0, float(wave_period_variation)) * 0.5
-            if fixed_baseline_depth
-            else 0.0
-        )
-    )
-    curvature_amplitude = amplitude_max
-    curvature = (
-        curvature_amplitude
-        * (max_frequency_scale * math.pi / spacing) ** 2
-    )
-    tolerance_step = math.sqrt(
-        8.0 * max(0.001, float(path_tolerance_mm)) / curvature
-    )
-    sample_step = max(
-        0.05,
-        min(spacing * 0.25, 0.8, tolerance_step),
-    )
-    row_ys = []
-    y = min_y + spacing * 0.5
-    while y <= max_y:
-        row_ys.append(y)
-        y += spacing
-
-    x_values = []
-    x = min_x
-    while x <= max_x:
-        x_values.append(x)
-        x += sample_step
-
-    base_phases = [
-        2.0 * math.pi * (x - min_x) / wavelength for x in x_values
-    ]
-    wave_phases = base_phases
-    if equal_spacing and frequency_variation > 1e-9 and len(x_values) > 1:
-        span = max(max_x - min_x, wavelength)
-        long_period = max(wavelength * 7.0, span * 0.73)
-        short_period = max(wavelength * 2.2, span * 0.29)
-        phase_offset = (
-            2.0
-            * math.pi
-            * ((int(seed) * 0.6180339887498949) % 1.0)
-        )
-        short_phase_offset = (
-            2.0
-            * math.pi
-            * ((int(seed) * 0.4142135623730950 + 0.31) % 1.0)
-        )
-        frequency_scales = [
-            1.0
-            + frequency_variation
-            * (
-                0.67
-                * math.sin(
-                    2.0
-                    * math.pi
-                    * (x - min_x)
-                    / long_period
-                    + phase_offset
-                )
-                + 0.33
-                * math.sin(
-                    2.0
-                    * math.pi
-                    * (x - min_x)
-                    / short_period
-                    + short_phase_offset
-                )
-            )
-            for x in x_values
-        ]
-        radians_per_mm = 2.0 * math.pi / wavelength
-        wave_phases = [0.0]
-        for index in range(1, len(x_values)):
-            delta_x = x_values[index] - x_values[index - 1]
-            mean_frequency_scale = 0.5 * (
-                frequency_scales[index - 1] + frequency_scales[index]
-            )
-            wave_phases.append(
-                wave_phases[-1]
-                + radians_per_mm * mean_frequency_scale * delta_x
-            )
-
-    tone_rows = []
-    depth_rows = []
-    for y in row_ys:
-        check_cancelled(cancel_check)
-        tone_rows.append(
-            [
-                darkness(x * ca - y * sa, x * sa + y * ca)
-                for x in x_values
-            ]
-        )
-        if depth_darkness is not None:
-            depth_rows.append(
-                [
-                    depth_darkness(x * ca - y * sa, x * sa + y * ca)
-                    for x in x_values
-                ]
-            )
-    if depth_darkness is None:
-        depth_rows = tone_rows
-    coverage_rows = tone_rows
-    if fixed_baseline_depth and len(x_values) > 2:
-        depth_span_samples = max(
-            1,
-            int(
-                round(
-                    WAVE_DEPTH_ALONG_SMOOTHING_PITCHES
-                    * spacing
-                    / max(sample_step, 1e-9)
-                )
-            ),
-        )
-        coverage_span_samples = max(
-            1,
-            int(
-                round(
-                    WAVE_COVERAGE_ALONG_SMOOTHING_PITCHES
-                    * spacing
-                    / max(sample_step, 1e-9)
-                )
-            ),
-        )
-        coverage_rows = _smooth_tone_rows(
-            tone_rows,
-            max(0, coverage_span_samples // 2),
-            WAVE_COVERAGE_ROW_WINDOW,
-        )
-        smoothed_tone = _smooth_tone_rows(
-            depth_rows,
-            max(0, depth_span_samples // 2),
-            WAVE_DEPTH_ROW_WINDOW,
-        )
-    else:
-        smoothed_tone = _smooth_tone_rows(
-            depth_rows,
-            0,
-            WAVE_DEPTH_ROW_WINDOW,
-        )
-    depth_intensity = max(0.0, float(wave_depth_intensity))
-    if depth_intensity <= 1e-9:
-        smoothed_tone = [
-            [0.5] * len(row)
-            for row in smoothed_tone
-        ]
-    elif abs(depth_intensity - 1.0) > 1e-9:
-        shaped = []
-        for row in smoothed_tone:
-            shaped_row = []
-            for value in row:
-                value = max(0.0, min(1.0, float(value)))
-                if depth_intensity < 1.0:
-                    shaped_row.append(
-                        0.5 + (value - 0.5) * depth_intensity
-                    )
-                    continue
-                band = 0.5 / depth_intensity
-                normalized = max(
-                    0.0,
-                    min(
-                        1.0,
-                        0.5 + (value - 0.5) / (2.0 * band),
-                    ),
-                )
-                smooth = normalized * normalized * (
-                    3.0 - 2.0 * normalized
-                )
-                linear = max(
-                    0.0,
-                    min(1.0, 0.5 + (value - 0.5) * depth_intensity),
-                )
-                weight = min(1.0, depth_intensity - 1.0)
-                shaped_row.append(
-                    linear * (1.0 - weight) + smooth * weight
-                )
-            shaped.append(shaped_row)
-        smoothed_tone = shaped
-    shared_tone = [
-        sum(row[x_index] for row in smoothed_tone)
-        / max(len(smoothed_tone), 1)
-        for x_index in range(len(x_values))
-    ]
-    row_clearance_scales = [None] * len(row_ys)
-
-    if equal_spacing:
-        # Every row receives the same displacement at each x. The vertical
-        # distance between all row centre lines is therefore exactly `spacing`.
-        positions = [
-            [None] * len(x_values)
-            for _row_index in range(len(row_ys))
-        ]
-        for row_index, y in enumerate(row_ys):
-            for x_index, x in enumerate(x_values):
-                if coverage_rows[row_index][x_index] >= INK_FLOOR:
-                    offset = (
-                        amplitude_max
-                        * shared_tone[x_index]
-                        * math.sin(wave_phases[x_index])
-                    )
-                    positions[row_index][x_index] = (x, y + offset)
-    elif fixed_baseline_depth:
-        clearance = max(0.0, float(minimum_clearance_mm))
-        clearance_target = clearance + WAVE_CLEARANCE_SAFETY_MARGIN_MM
-        if clearance_target > spacing + 1e-9:
-            raise ValueError(
-                "Wave screen cannot keep adjacent pen strokes apart: "
-                "the effective pitch is smaller than the pen width plus "
-                "edge gap."
-            )
-        required_pitch = fixed_wave_minimum_pitch_mm(
-            clearance,
-            period_pitches=wave_period_pitches,
-            period_variation=wave_period_variation,
-            frequency_variation=wave_frequency_variation,
-            amplitude_scale=amplitude_scale,
-        )
-        if spacing < required_pitch - 1e-9:
-            raise ValueError(
-                "Variable-depth Wave needs a larger effective pitch for "
-                "the selected period and tonal variation: current %.3f mm, "
-                "minimum %.3f mm."
-                % (spacing, required_pitch)
-            )
-        radians_per_mm = 2.0 * math.pi / wavelength
-        period_variation = max(
-            0.0,
-            float(wave_period_variation),
-        )
-        common_phase_offset = (
-            2.0
-            * math.pi
-            * ((int(seed) * 0.6180339887498949) % 1.0)
-        )
-        span = max(max_x - min_x, wavelength)
-
-        def common_frequency_variation(x_index, phase_offset):
-            if frequency_variation <= 1e-9:
-                return 0.0
-            return frequency_variation * (
-                0.6
-                * math.sin(
-                    2.0
-                    * math.pi
-                    * (x_values[x_index] - min_x)
-                    / max(span * 0.71, wavelength * 5.0)
-                    + phase_offset * 0.37
-                )
-                + 0.4
-                * math.sin(
-                    2.0
-                    * math.pi
-                    * (x_values[x_index] - min_x)
-                    / max(span * 0.29, wavelength * 2.2)
-                    + phase_offset * 0.83
-                )
-            )
-
-        nested_phases = [common_phase_offset]
-        for x_index in range(1, len(x_values)):
-            delta_x = x_values[x_index] - x_values[x_index - 1]
-            common_variation = common_frequency_variation(
-                x_index,
-                common_phase_offset,
-            )
-            frequency_scale = max(
-                0.5,
-                1.0
-                + common_variation
-                + period_variation
-                * (shared_tone[x_index] - 0.5),
-            )
-            nested_phases.append(
-                nested_phases[-1]
-                + radians_per_mm * frequency_scale * delta_x
-            )
-
-        local_scales = [
-            [1.0] * len(x_values)
-            for _row_index in range(len(row_ys))
-        ]
-        desired_offsets = [
-            [
-                (
-                    amplitude_max
-                    * smoothed_tone[row_index][x_index]
-                    * math.sin(nested_phases[x_index])
-                    if coverage_rows[row_index][x_index] >= INK_FLOOR
-                    else None
-                )
-                for x_index in range(len(x_values))
-            ]
-            for row_index in range(len(row_ys))
-        ]
-
-        def candidate(scales):
-            result = [
-                [None] * len(x_values)
-                for _row_index in range(len(row_ys))
-            ]
-            for row_index, y in enumerate(row_ys):
-                scale = scales[row_index]
-                for x_index, x in enumerate(x_values):
-                    desired = desired_offsets[row_index][x_index]
-                    if desired is None:
-                        continue
-                    offset = (
-                        scale
-                        * local_scales[row_index][x_index]
-                        * desired
-                    )
-                    result[row_index][x_index] = (x, y + offset)
-            return result
-
-        def pair_positions(first_row, second_row):
-            first = [None] * len(x_values)
-            second = [None] * len(x_values)
-            for x_index, x in enumerate(x_values):
-                first_desired = desired_offsets[first_row][x_index]
-                second_desired = desired_offsets[second_row][x_index]
-                if first_desired is not None:
-                    first[x_index] = (
-                        x,
-                        row_ys[first_row]
-                        + scales[first_row]
-                        * local_scales[first_row][x_index]
-                        * first_desired,
-                    )
-                if second_desired is not None:
-                    second[x_index] = (
-                        x,
-                        row_ys[second_row]
-                        + scales[second_row]
-                        * local_scales[second_row][x_index]
-                        * second_desired,
-                    )
-            return first, second
-
-        scales = [1.0] * len(row_ys)
-        positions = candidate(scales)
-        for _iteration in range(max(4, len(row_ys) * 2)):
-            changed = False
-            for row_index in range(len(row_ys) - 1):
-                for x_index in range(len(x_values)):
-                    if (
-                        coverage_rows[row_index][x_index] < INK_FLOOR
-                        or coverage_rows[row_index + 1][x_index] < INK_FLOOR
-                    ):
-                        continue
-                    first_desired = desired_offsets[row_index][x_index]
-                    second_desired = desired_offsets[
-                        row_index + 1
-                    ][x_index]
-                    first_offset = (
-                        scales[row_index]
-                        * local_scales[row_index][x_index]
-                        * first_desired
-                    )
-                    second_offset = (
-                        scales[row_index + 1]
-                        * local_scales[row_index + 1][x_index]
-                        * second_desired
-                    )
-                    gap = spacing + second_offset - first_offset
-                    if gap >= clearance_target - 1e-9:
-                        continue
-                    relative = second_offset - first_offset
-                    if relative >= -1e-12:
-                        continue
-                    factor = max(
-                        0.0,
-                        min(
-                            1.0,
-                            (clearance_target - spacing) / relative,
-                        ),
-                    )
-                    local_scales[row_index][x_index] *= factor
-                    local_scales[row_index + 1][x_index] *= factor
-                    changed = True
-            positions = candidate(scales)
-            if not changed:
-                break
-        for _iteration in range(max(4, len(row_ys) * 2)):
-            failed = False
-            for row_index in range(len(row_ys) - 1):
-                first = _polyline_segments(positions[row_index])
-                second = _polyline_segments(positions[row_index + 1])
-                if _polyline_pair_is_clear(
-                    first,
-                    second,
-                    clearance_target,
-                ):
-                    continue
-                failed = True
-                low = 0.0
-                high = 1.0
-                best = 0.0
-                for _step in range(WAVE_CLEARANCE_SEARCH_STEPS + 1):
-                    fraction = (low + high) * 0.5
-                    saved_first = scales[row_index]
-                    saved_second = scales[row_index + 1]
-                    scales[row_index] = saved_first * fraction
-                    scales[row_index + 1] = saved_second * fraction
-                    trial_first, trial_second = pair_positions(
-                        row_index,
-                        row_index + 1,
-                    )
-                    trial_first = _polyline_segments(trial_first)
-                    trial_second = _polyline_segments(trial_second)
-                    if _polyline_pair_is_clear(
-                        trial_first,
-                        trial_second,
-                        clearance_target,
-                    ):
-                        best = fraction
-                        low = fraction
-                    else:
-                        high = fraction
-                    scales[row_index] = saved_first
-                    scales[row_index + 1] = saved_second
-                scales[row_index] *= best
-                scales[row_index + 1] *= best
-            positions = candidate(scales)
-            if not failed and _wave_clearance_ok(
-                positions,
-                spacing,
-                clearance_target,
-            ):
-                break
-        if not _wave_clearance_ok(
-            positions,
-            spacing,
-            clearance_target,
-        ):
-            raise ValueError(
-                "Wave screen could not keep the fixed baseline rows clear "
-                "of the configured pen envelope."
-            )
-        row_clearance_scales = [
-            scales[row_index]
-            * min(local_scales[row_index])
-            for row_index in range(len(row_ys))
-        ]
-    elif zero_anchored_depth:
-        clearance = max(0.0, float(minimum_clearance_mm))
-        if clearance > spacing + 1e-9:
-            raise ValueError(
-                "Wave screen cannot keep adjacent pen strokes apart: "
-                "the effective pitch is smaller than the pen width plus "
-                "edge gap."
-            )
-
-        def candidate_positions(
-            depth_scale=1.0,
-        ):
-            result = [
-                [None] * len(x_values)
-                for _row_index in range(len(row_ys))
-            ]
-            for x_index, x in enumerate(x_values):
-                check_cancelled(cancel_check)
-                for row_index, y in enumerate(row_ys):
-                    if coverage_rows[row_index][x_index] < INK_FLOOR:
-                        continue
-                    offset = (
-                        amplitude_max
-                        * depth_scale
-                        * smoothed_tone[row_index][x_index]
-                        * math.sin(base_phases[x_index])
-                    )
-                    result[row_index][x_index] = (x, y + offset)
-            return result
-
-        positions = candidate_positions(
-            depth_scale=1.0
-        )
-        if not _wave_clearance_ok(
-            positions,
-            spacing,
-            minimum_clearance_mm,
-        ):
-            flat = candidate_positions(depth_scale=0.0)
-            if not _wave_clearance_ok(
-                flat,
-                spacing,
-                minimum_clearance_mm,
-            ):
-                raise ValueError(
-                    "Wave screen cannot keep adjacent pen strokes apart: "
-                    "the effective pitch is too small for the configured "
-                    "pen width and edge gap."
-                )
-            low = 0.0
-            high = 1.0
-            best = flat
-            for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
-                depth_scale = (low + high) * 0.5
-                candidate = candidate_positions(depth_scale=depth_scale)
-                if _wave_clearance_ok(
-                    candidate,
-                    spacing,
-                    minimum_clearance_mm,
-                ):
-                    low = depth_scale
-                    best = candidate
-                else:
-                    high = depth_scale
-            positions = best
-        row_clearance_scales = [None] * len(row_ys)
-    else:
-        max_tone_step = min(
-            1.0,
-            spacing * WAVE_MAX_ADJACENT_GAP_FRACTION / amplitude_max,
-        )
-        depth_tone = []
-        for x_index in range(len(x_values)):
-            column = []
-            for row_index in range(len(smoothed_tone)):
-                current = smoothed_tone[row_index][x_index]
-                if column:
-                    previous = column[-1]
-                    current = previous + max(
-                        -max_tone_step,
-                        min(max_tone_step, current - previous),
-                    )
-                column.append(current)
-            depth_tone.append(column)
-        positions = [
-            [None] * len(x_values)
-            for _row_index in range(len(row_ys))
-        ]
-        for row_index, y in enumerate(row_ys):
-            for x_index, x in enumerate(x_values):
-                if coverage_rows[row_index][x_index] >= INK_FLOOR:
-                    offset = (
-                        amplitude_max
-                        * depth_tone[x_index][row_index]
-                        * math.sin(base_phases[x_index])
-                    )
-                    positions[row_index][x_index] = (x, y + offset)
-        row_clearance_scales = [None] * len(row_ys)
-
-    rows = []
-    row_policy = (
-        "fixed_baselines"
-        if fixed_baseline_depth
-        else "translated_shared_wave"
-        if equal_spacing
-        else "phase_locked_row_depth"
-        if zero_anchored_depth
-        else "bounded_row_depth"
-    )
-    for row_index in range(len(row_ys)):
-        check_cancelled(cancel_check)
-        baseline = (
-            min_x * ca - row_ys[row_index] * sa,
-            min_x * sa + row_ys[row_index] * ca,
-        )
-        current = []
-        for point in positions[row_index]:
-            if point is not None:
-                current.append(point)
-            elif current:
-                if (len(current) - 1) * sample_step >= min_length_mm:
-                    trail = WaveTrail(
-                        [
-                            (px * ca - py * sa, px * sa + py * ca)
-                            for px, py in current
-                        ],
-                        wave_row_index=row_index,
-                        wave_baseline_mm=baseline,
-                        wave_row_policy=row_policy,
-                    )
-                    trail.wave_clearance_scale = row_clearance_scales[
-                        row_index
-                    ]
-                    trail.wave_period_pitches = float(
-                        wave_period_pitches
-                    )
-                    trail.wave_period_variation = float(
-                        wave_period_variation
-                    )
-                    trail.wave_depth_intensity = float(
-                        wave_depth_intensity
-                    )
-                    rows.append(trail)
-                current = []
-        if current and (len(current) - 1) * sample_step >= min_length_mm:
-            trail = WaveTrail(
-                [
-                    (px * ca - py * sa, px * sa + py * ca)
-                    for px, py in current
-                ],
-                wave_row_index=row_index,
-                wave_baseline_mm=baseline,
-                wave_row_policy=row_policy,
-            )
-            trail.wave_clearance_scale = row_clearance_scales[row_index]
-            trail.wave_period_pitches = float(wave_period_pitches)
-            trail.wave_period_variation = float(
-                wave_period_variation
-            )
-            trail.wave_depth_intensity = float(wave_depth_intensity)
-            rows.append(trail)
-    return rows
 
 
 def _field_contours(tone, geometry, spacing, kind="contours", cancel_check=None):
@@ -1825,7 +1081,9 @@ def screen_channel(
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact instantaneous spacing),
     ``waves_fixed`` (equal row baselines with tone-driven per-row amplitude,
-    phase, and phase rate), ``waves_zero`` (shared phase with tone-driven row
+    phase, and phase rate), ``waves_fidelity`` (the same fixed baselines plus
+    deterministic per-ink row-density gating and immediate shared-luminance
+    contrast spikes), ``waves_zero`` (shared phase with tone-driven row
     amplitude, variable spacing, and exact clearance; legacy diagnostic use
     only), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
@@ -1842,10 +1100,11 @@ def screen_channel(
     Fixed-baseline depth uses ``wave_period_pitches`` as its base wavelength in
     row pitches. ``wave_period_variation`` shortens dark-row periods and
     lengthens light-row periods by up to that fractional amount.
-    ``wave_depth_intensity`` applies a bounded contrast curve to each ink's
-    locally smoothed depth before it drives period and amplitude. `100 %` is
-    neutral; higher values turn narrow tonal differences into decisive
-    waveform changes without amplifying per-pixel texture.
+    ``wave_depth_intensity`` applies a bounded contrast curve to the depth
+    signal before it drives period and amplitude. In ``waves_fixed`` the
+    signal is each ink's locally smoothed depth. In ``waves_fidelity``,
+    absolute smoothed ink coverage controls row density while immediate
+    adjacent scene-luminance contrast controls amplitude; `100 %` is neutral.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1855,6 +1114,14 @@ def screen_channel(
     top = geometry["off_y"]
     right = left + geometry["width_mm"]
     bottom = top + geometry["height_mm"]
+    source_steps = []
+    pixels_w = int(geometry.get("pixels_w", 0) or 0)
+    pixels_h = int(geometry.get("pixels_h", 0) or 0)
+    if pixels_w > 0:
+        source_steps.append(float(geometry["width_mm"]) / pixels_w)
+    if pixels_h > 0:
+        source_steps.append(float(geometry["height_mm"]) / pixels_h)
+    contrast_source_step_mm = min(source_steps, default=0.0)
     bounds = (left, top, right, bottom)
     spacing = max(0.2, float(spacing_mm))
     cap = max(16, int(max_marks))
@@ -1871,7 +1138,7 @@ def screen_channel(
     style = str(style).strip().lower()
     if style in ("waves", "waves_zero") and not allow_variable_wave_spacing:
         style = "waves_even"
-    if style == "waves_fixed":
+    if style in ("waves_fixed", "waves_fidelity"):
         if row_clearance_mm is None:
             fixed_clearance = (
                 max(0.0, float(pen_diameter_mm))
@@ -1949,7 +1216,13 @@ def screen_channel(
                     cancel_check=cancel_check,
                 )
             )
-    elif style in ("waves", "waves_even", "waves_zero", "waves_fixed"):
+    elif style in (
+        "waves",
+        "waves_even",
+        "waves_zero",
+        "waves_fixed",
+        "waves_fidelity",
+    ):
         if row_clearance_mm is None:
             minimum_clearance_mm = (
                 max(0.0, float(pen_diameter_mm)) + WAVE_MIN_EDGE_GAP_MM
@@ -1967,13 +1240,19 @@ def screen_channel(
             depth_darkness=depth_darkness,
             equal_spacing=(style == "waves_even"),
             zero_anchored_depth=(style == "waves_zero"),
-            fixed_baseline_depth=(style == "waves_fixed"),
+            fixed_baseline_depth=style in (
+                "waves_fixed",
+                "waves_fidelity",
+            ),
             minimum_clearance_mm=minimum_clearance_mm,
             wave_frequency_variation=wave_frequency_variation,
             wave_period_pitches=wave_period_pitches,
             wave_period_variation=wave_period_variation,
             wave_depth_intensity=wave_depth_intensity,
             seed=seed,
+            fidelity_row_density=(style == "waves_fidelity"),
+            row_pen_diameter_mm=pen_diameter_mm,
+            contrast_source_step_mm=contrast_source_step_mm,
         )
     elif style == "tsp":
         points = stipple_points(

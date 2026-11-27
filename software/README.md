@@ -489,10 +489,11 @@ then the tone-adaptive factor of 1-3x) at or below the pen width for full
 coverage. Simulated pen strokes use a multisampled miter-joined triangle
 ribbon rather than wide OpenGL lines, so zooming in does not expose a notch at
 every generated segment or connect separate contours. An **Ink profile...**
-button loads
-the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
-multiplies your pens' measured transmittances instead of the display ink
-colours. **Help** has the shortcut list
+  button loads
+  the `*-profile.json` written by `tools\cmyk_calibrate.py`, so source
+  separation and the multiply simulation both use your pens' measured
+  transmittances instead of the nominal display-ink response. **Help** has the
+  shortcut list
 (F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
 contributed by `software/generator_tabs/*_tab.py` modules and discovered at
@@ -531,6 +532,13 @@ Current tools:
   an **Auto (photo)** button that analyzes the image and sets auto levels,
   brightness, contrast, saturation, GCR, a starting gamma, and a modest
   luminance-sharpening preset.
+  - Source images are EXIF-oriented and color-managed to sRGB. Transparent
+    pixels are composited over paper white before tone analysis, so the
+    transparent exterior of a PNG does not become a false black/ink field.
+  - Separation solves each pixel against the same process-ink multiply model
+    used by the preview, retaining the channel-complement result whenever the
+    model cannot improve it. C/M/Y/K weights and ink gamma remain deliberate
+    operator adjustments after that match.
   - For Wave screen, Auto uses an exposure-preserving color path. It reads the
     source's midtone, tonal span, and high-chroma percentile, then keeps normal
     photos near neutral saturation/contrast instead of pushing them to the
@@ -554,8 +562,8 @@ Current tools:
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / equidistant
-  Wave / variable-depth Wave with fixed baselines / interference (gyroid) /
-  single line (TSP) /
+  Wave / variable-depth Wave with fixed baselines / variable-depth fidelity
+  Wave with tone density / interference (gyroid) / single line (TSP) /
   topographic contours / rectilinear fill),
   dot pitch (with a **Match pen** button that sets one pen width for ordinary
   screens or pen plus edge gap for Wave screens at the current artwork scale),
@@ -746,11 +754,13 @@ Current tools:
   row segments where the source image has no ink.
   **Variable-depth Wave - fixed baselines** is the second production Wave
   mode. It keeps the same equally spaced baseline for every row,
-  `baseline_i = y0 + i * pitch`, but lets locally smoothed scene depth vary
-  each row's amplitude, phase, and winding rate. It does not try to keep every
-  instantaneous visible gap equal: those gaps widen and narrow with the
-  row-local waveforms, which is how depth is shown. When depth is zero every
-  row collapses onto its straight baseline. The screen enforces the pen plus
+  `baseline_i = y0 + i * pitch`, but lets locally smoothed channel depth vary
+  each row's amplitude inside one shared nested phase carrier, while the
+  carrier's winding rate follows the image-wide frequency modulation plus the
+  column-averaged depth. It does not try to keep every instantaneous visible
+  gap equal: those gaps widen and narrow with the row-local waveforms, which
+  is how depth is shown. When depth is zero every row collapses onto its
+  straight baseline. The screen enforces the pen plus
   `0.25 mm` edge gap with a shortest-segment check; if a steep pair violates
   the envelope, only the affected local offsets are damped. **Wave period**
   sets the base cycle width in row pitches; **Period variation** controls how
@@ -762,17 +772,46 @@ Current tools:
   moves that waveform depth from CMY coverage into black. The final scaled
   path is checked again before planning. This mode is stored as `waves_fixed`;
   existing `waves_even` recipes keep their separate exact-spacing geometry.
-  **Depth intensity** applies a bounded contrast curve to each channel's tone
-  before it drives both period and amplitude. `100 %` is neutral, lower values
-  soften the difference between light and dark, and higher values turn even a
-  narrow tonal difference into a decisive waveform change. The depth field is
-  box-smoothed along each row by `1.5` row pitches as well as across rows, so
-  per-pixel black texture cannot create a second high-frequency wave inside
-  the designed carrier. A separate ink-presence field is smoothed along rows
-  by `2.5` pitches and across three rows before deciding where a Wave row is
-  visible. This prevents dark-but-textured image coverage from chopping one
-  carrier into repeated miniature wavelets, while genuinely light regions
-  still break the row normally.
+  Full-tone crest height is `min(pitch, 0.25 x wavelength)` times the Dot-size
+  gain, so a long period still reads as a visible sinusoid instead of a
+  near-straight line; at the default `2 x pitch` period this is the original
+  half-pitch crest.
+  **Variable-depth Wave - fidelity (tone density)** (`waves_fidelity`) keeps
+  the same safe candidate-row lattice and shared Wave carrier, but
+  deterministically skips light rows according to each separated ink's
+  coverage. Emitted rows still sit on integer multiples of the configured
+  pitch. This extends the usable ink-density range below the continuous-row
+  floor without adding crossing rows or weakening the pen-plus-edge clearance
+  check. The set manifest and spacing checker record tone-density gaps as
+  intentional while still proving the underlying baseline lattice.
+  Fidelity amplitude is separate from that absolute-tone density field. It is
+  an unsmoothed local contrast spike driven by shared scene-luminance
+  differences within one source pixel on either side of each output sample.
+  A narrow edge therefore creates a narrow waveform pulse whose height scales
+  with the immediate light/dark difference, while a uniform area has zero
+  amplitude and stays on its baseline. There is no nonzero highlight amplitude
+  floor. Sampling the immediate source-pixel neighbourhood also keeps a
+  one-pixel edge from disappearing between the normal carrier samples.
+  In fidelity mode **Depth intensity** scales that local contrast spike;
+  `100 %` is neutral, lower values soften spikes, and higher values make them
+  more decisive. The source-pixel contrast window has a small dead band for
+  compression or paper-texture noise, without smoothing the remaining edge.
+  The smoothed absolute-tone field still controls row density and the
+  scene-wide period variation.
+  The fixed-baseline style `waves_fixed` retains its prior smooth depth
+  response. Its **Depth intensity** applies a bounded curve to each channel's
+  locally smoothed tone before it drives period and amplitude. That depth
+  field is box-smoothed along each row by `1.5` row pitches as well as across
+  rows, so per-pixel ink texture cannot create a second high-frequency wave
+  inside the designed carrier. A separate ink-presence field is smoothed
+  along rows by `2.5` pitches and across three rows before deciding where a
+  Wave row is visible. This prevents dark-but-textured image coverage from
+  chopping one carrier into repeated miniature wavelets, while genuinely
+  light regions still break the row normally. Fixed-baseline rows also use a per-column
+  forward/backward amplitude envelope and a slope-aware clearance cap. Local
+  tonal differences are spread across nearby rows instead of multiplying both
+  rows by a collapsing scale, so meaningful depth survives at tight pitch. The
+  final shortest-segment check remains authoritative.
   Imported-outline pen-width shrink is disabled for this self-screened mode so
   it cannot narrow the configured physical row clearance. Save preflight warns
   when clearance forces enough local damping to limit the requested period
@@ -839,6 +878,14 @@ Current tools:
   requires the manifest and G-code to identify the shared row-angle lock. The current
   verified 199-column XY-only Ben2 spreads are `0.002448`, `0.002254`,
   `0.000149`, and `0.001541 mm` for cyan/magenta/yellow/black.
+  Measure software fidelity against a source image with
+  `python ..\tools\cmyk_wave_fidelity.py --image <source> --style waves_fidelity`.
+  It uses the production preprocess and screen path, reports JSON, and fails on
+  source-detail, RGB/CIELAB colour, per-ink coverage, Wave amplitude,
+  depth-intensity, and G-code evidence regressions. Use `--recipe live-failed`
+  for the owner's historical failed controls or `--recipe saved-sidecar` for
+  the recipe stored beside the image. This is a software-composite oracle; it
+  does not model paper absorption, felt-tip spread, force, or registration.
   Shared translation removes the systematic per-ink global offset only. The
   default normalized fields still differ locally: relative to yellow, the
   software-domain RMS/max differences are cyan `0.125914/0.443952 mm`,

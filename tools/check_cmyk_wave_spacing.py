@@ -71,20 +71,20 @@ def load_manifest(path: Path) -> dict:
         )
     screen = data.get("screen", {})
     style = screen.get("style")
-    if style not in ("waves_even", "waves_fixed"):
+    if style not in ("waves_even", "waves_fixed", "waves_fidelity"):
         raise ValueError(
             "manifest screen style is not a production Wave baseline mode"
         )
     if style == "waves_even" and screen.get("preserve_exact_row_pitch") is not True:
         raise ValueError("manifest does not record an active row-spacing guard")
     if (
-        style == "waves_fixed"
+        style in ("waves_fixed", "waves_fidelity")
         and screen.get("preserve_fixed_row_baselines") is not True
     ):
         raise ValueError(
             "manifest does not record an active fixed-baseline guard"
         )
-    if style == "waves_fixed":
+    if style in ("waves_fixed", "waves_fidelity"):
         grid = data.get("wave_baseline_grid")
         if not isinstance(grid, dict):
             raise ValueError(
@@ -94,10 +94,12 @@ def load_manifest(path: Path) -> dict:
             raise ValueError(
                 "fixed-baseline manifest has the wrong baseline-grid mode"
             )
-        if (
-            grid.get("instantaneous_gap_semantics")
-            != "varies_by_design"
-        ):
+        expected_gap_semantics = (
+            "varies_by_design_with_tone_density"
+            if style == "waves_fidelity"
+            else "varies_by_design"
+        )
+        if grid.get("instantaneous_gap_semantics") != expected_gap_semantics:
             raise ValueError(
                 "fixed-baseline manifest does not classify variable "
                 "instantaneous gaps as intentional"
@@ -639,7 +641,7 @@ def main(argv: list[str] | None = None) -> int:
                     pitch,
                 )
             )
-            if style == "waves_fixed":
+            if style in ("waves_fixed", "waves_fidelity"):
                 channel_grid = per_channel_grid.get(channel, {})
                 result = audit_fixed_baseline_program(
                     path,
@@ -669,11 +671,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         passed = (
             float(result["baseline_residual_mm"]) <= args.tolerance_mm
-            if style == "waves_fixed"
+            if style in ("waves_fixed", "waves_fidelity")
             else float(result["spread_mm"]) <= args.tolerance_mm
         )
         failed |= not passed
-        if style == "waves_fixed":
+        if style in ("waves_fixed", "waves_fidelity"):
             print(
                 "%-8s pitch=%.6f rows=%3d residual=%.6f "
                 "wave-range=%.6f..%.6f mm %s"
@@ -708,7 +710,7 @@ def main(argv: list[str] | None = None) -> int:
             % args.tolerance_mm
         )
         return 1
-    if style == "waves_fixed":
+    if style in ("waves_fixed", "waves_fidelity"):
         print(
             "PASS: all four inks keep fixed uniform baselines; "
             "row-local visible gaps may vary"
